@@ -1,0 +1,5 @@
+#define WINDOW_SIZE 500
+#define SNEK_THICC 50
+
+#define FPS 1
+#define DESIRED_FRAME_TIME (1000 / FPS)
