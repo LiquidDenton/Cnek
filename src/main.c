@@ -1,3 +1,4 @@
+#include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_timer.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
@@ -7,18 +8,18 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 short int gameIsRunning;
 
-SDL_Rect snek[150];
 short int snekHeadPos[2];
-short int prevSnekHeadPos[2];
 short int snekLength;
  
 int lastFrameTicks;
 
 short int snekDir;
 
+SDL_Rect snekRect;
+
 SDL_Rect apple;
 
-short int gridSize;
+short int grid[GRID_SIZE][GRID_SIZE];
 
 short int initSDL(void) {
     if (0 != SDL_Init(SDL_INIT_EVERYTHING)) {
@@ -40,20 +41,25 @@ short int initSDL(void) {
 }
 
 void setup(void) {
-    for (short int i = 0; i < 150; i++) {
-        snek[i].h = SNEK_THICC;
-        snek[i].w = SNEK_THICC;
-        snek[i].x = WINDOW_SIZE / 2;
-        snek[i].y = WINDOW_SIZE / 2;     
-    }
+    snekRect.h = SNEK_THICC;
+    snekRect.w = SNEK_THICC;
     apple.h = SNEK_THICC;
     apple.w = SNEK_THICC;
 
+    for (int i = 0; i < GRID_SIZE; i++) {
+        for (int j = 0; j < GRID_SIZE; j++) {
+            grid[i][j] = 0;
+        }
+    }
+
     snekDir = 0;
 
-    gridSize = WINDOW_SIZE / SNEK_THICC;
+    snekLength = 3;
 
     lastFrameTicks = SDL_GetTicks();
+
+    snekHeadPos[0] = GRID_SIZE / 2;
+    snekHeadPos[1] = GRID_SIZE / 2;
 }
 
 void processInput() {
@@ -71,18 +77,34 @@ void update() {
         lastFrameTicks = SDL_GetTicks();
         switch (snekDir) {
             case 0:
-                snek[0].y += 1;
+                snekHeadPos[0] += 1;
                 break;
             case 1: 
-                snek[0].y -= 1;
+                snekHeadPos[1] += 1;
                 break;
-            case 3:
-                snek[0].x += 1;
+            case 2:
+                snekHeadPos[0] -= 1;
                 break;
-            case 4: 
-                snek[0].x -= 1;
+            case 3: 
+                snekHeadPos[1] -= 1;
                 break;
         }
+
+        snekDir++;
+        if (snekDir > 3) {
+            snekDir = 0;
+        }
+
+        grid[snekHeadPos[0]][snekHeadPos[1]] = snekLength + 1;
+
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                if (grid[i][j] > 0) {
+                    grid[i][j] -= 1;
+                }
+            }
+        }
+
     }
 }
 
@@ -90,8 +112,18 @@ void render(void) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-    SDL_RenderFillRect(renderer, &snek[0]);
+    for (int i = 0; i < GRID_SIZE; i++) {
+        for (int j = 0; j < GRID_SIZE; j++) {
+            if (grid[i][j] > 0) {
+                snekRect.x = i * SNEK_THICC;
+                snekRect.y = j * SNEK_THICC;
+                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+                SDL_RenderFillRect(renderer, &snekRect);
+            }
+        }
+    }
+
+
 
     SDL_RenderPresent(renderer);
 }
