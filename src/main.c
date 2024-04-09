@@ -16,6 +16,7 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 short int gameIsRunning;
 short int gamePaused;
+short int inputLock;
 
 short int applePos[2];
 
@@ -36,6 +37,8 @@ struct Snek {
 
 struct Snek snek;
 struct Text loserText;
+struct Text menuText;
+struct Text pointText;
 
 int lastFrameTicks;
 
@@ -100,9 +103,33 @@ void setup(void) {
     loserText.message = TTF_RenderText_Solid(loserText.font, "L", loserText.color);
     loserText.rect.h = 80;
     loserText.rect.w = 50;
-    loserText.rect.x = WINDOW_SIZE / 2;
-    loserText.rect.y = WINDOW_SIZE / 2;
+    loserText.rect.x = WINDOW_SIZE / 2 - 30;
+    loserText.rect.y = WINDOW_SIZE / 2 - 30;
     loserText.texture = SDL_CreateTextureFromSurface(renderer, loserText.message);
+
+    menuText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 15);
+    menuText.color.r = 150;
+    menuText.color.g = 150;
+    menuText.color.b = 150;
+    menuText.color.a = 255;
+
+    menuText.message = TTF_RenderText_Solid(menuText.font, "Press space to continue", menuText.color);
+    menuText.rect.h = 30;
+    menuText.rect.w = 300;
+    menuText.rect.x = WINDOW_SIZE / 2 - 150;
+    menuText.rect.y = WINDOW_SIZE / 2 + 50;
+    menuText.texture = SDL_CreateTextureFromSurface(renderer, menuText.message);
+
+    pointText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 15);
+    pointText.color.r = 150;
+    pointText.color.g = 150;
+    pointText.color.b = 150;
+    pointText.color.a = 255;
+
+    pointText.rect.h = 15;
+    pointText.rect.w = 60;
+    pointText.rect.x = 0;
+    pointText.rect.y = 0;
 
     snek.dir = 3;
 
@@ -134,23 +161,27 @@ void processInput() {
         case SDL_KEYDOWN:
             switch (event.key.keysym.sym) {
                 case SDLK_DOWN:
-                    if (snek.dir != 3) {
+                    if (snek.dir != 3 && !inputLock) {
                     snek.dir = 1;
+                    inputLock = 1;
                     }
                     break;
                 case SDLK_UP:
-                    if (snek.dir != 1) {
+                    if (snek.dir != 1 && !inputLock) {
                     snek.dir = 3;
+                    inputLock = 1;
                     }
                     break;
                 case SDLK_RIGHT:
-                    if (snek.dir != 2) {
+                    if (snek.dir != 2 && !inputLock) {
                     snek.dir = 0;
+                    inputLock = 1;
                     }
                     break;
                 case SDLK_LEFT:
-                    if (snek.dir != 0) {
+                    if (snek.dir != 0 && !inputLock) {
                     snek.dir = 2;
+                    inputLock = 1;
                     }
                     break;
                 case SDLK_ESCAPE:
@@ -213,6 +244,19 @@ void update() {
         }
 
     }
+
+    char PointMessage[] = "Length:";
+    char renderPointsText[12];
+
+    snprintf(renderPointsText, 12, "%s %d", PointMessage, snek.length);
+
+    
+
+    pointText.message = TTF_RenderText_Solid(pointText.font, renderPointsText, pointText.color);
+    pointText.texture = SDL_CreateTextureFromSurface(renderer, pointText.message);
+
+    inputLock = 0;
+
 }
 
 void render(void) {
@@ -237,9 +281,11 @@ void render(void) {
 
 
 
+    SDL_RenderCopy(renderer, pointText.texture, NULL, &pointText.rect);
 
     if (gamePaused) {
         SDL_RenderCopy(renderer, loserText.texture, NULL, &loserText.rect);
+        SDL_RenderCopy(renderer, menuText.texture, NULL, &menuText.rect);
     }
     SDL_RenderPresent(renderer);
 }
