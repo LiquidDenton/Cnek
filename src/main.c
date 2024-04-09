@@ -108,7 +108,10 @@ void update() {
                 break;
         }
 
-        printf("x: %d y: %d\n", snekHeadPos[0], snekHeadPos[1]);
+        // DEBUG INFO printf("x: %d y: %d\n", snekHeadPos[0], snekHeadPos[1]);
+
+        // TODO: add death for when snek runs into itself
+        // TODO: add apple
 
         if (snekHeadPos[0] >= GRID_SIZE || snekHeadPos[1] >= GRID_SIZE || snekHeadPos[0] < 0 || snekHeadPos[1] < 0) {
             printf("\nL\n");
