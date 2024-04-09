@@ -114,6 +114,14 @@ void placeApple() {
         if (grid[applePos[0]][applePos[1]] > 0) {
             continue;
         }
+
+        SDL_DestroyTexture(pointText.texture);
+        char PointMessage[] = "Length:";
+        char renderPointsText[12];
+        snprintf(renderPointsText, 12, "%s %u", PointMessage, snek.length);
+        pointText.message = TTF_RenderText_Solid(pointText.font, renderPointsText, pointText.color);
+        pointText.texture = SDL_CreateTextureFromSurface(renderer, pointText.message);
+
         break;
     }
 
@@ -194,7 +202,7 @@ void processInput() {
 }
 
 void update() {
-    if (SDL_TICKS_PASSED(SDL_GetTicks(), lastFrameTicks + DESIRED_FRAME_TIME) && !gamePaused) {
+    if (SDL_TICKS_PASSED(SDL_GetTicks(), lastFrameTicks + 1000 / ((snek.length * SPEED_INCREASE_FACTOR) + SPEED_OFFSET)) && !gamePaused) {
         lastFrameTicks = SDL_GetTicks();
         switch (snek.dir) {
             case 0:
@@ -214,7 +222,6 @@ void update() {
         // printf("x: %d y: %d\n", snek.headPos[0], snek.headPos[1]);
 
         if (snek.headPos[0] >= GRID_SIZE || snek.headPos[1] >= GRID_SIZE || snek.headPos[0] < 0 || snek.headPos[1] < 0 || grid[snek.headPos[0]][snek.headPos[1]] > 0) {
-            printf("\nL\n");
             setup();
             return;
         }
@@ -244,15 +251,7 @@ void update() {
 
     }
 
-    char PointMessage[] = "Length:";
-    char renderPointsText[12];
 
-    snprintf(renderPointsText, 12, "%s %u", PointMessage, snek.length);
-
-    
-
-    pointText.message = TTF_RenderText_Solid(pointText.font, renderPointsText, pointText.color);
-    pointText.texture = SDL_CreateTextureFromSurface(renderer, pointText.message);
 
 
 
@@ -279,7 +278,6 @@ void render(void) {
     }
 
     SDL_RenderCopy(renderer, pointText.texture, NULL, &pointText.rect);
-    SDL_DestroyTexture(pointText.texture);
 
     if (gamePaused) {
         SDL_RenderCopy(renderer, loserText.texture, NULL, &loserText.rect);
