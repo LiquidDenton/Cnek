@@ -1,5 +1,5 @@
 build: 
-	gcc -Wall src/main.c -lSDL2 -o main
+	gcc -Wall -o main src/main.c -lSDL2 -lSDL2_ttf 
 clean:
 	rm main
 run:
