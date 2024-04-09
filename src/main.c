@@ -29,9 +29,9 @@ struct Text {
 };
 
 struct Snek {
-    short int headPos[2];
-    short int length;
-    short int dir;
+    unsigned short int headPos[2];
+    unsigned short int length;
+    unsigned short int dir;
     SDL_Rect rect;
 };
 
@@ -141,9 +141,7 @@ void setup(void) {
 
     snek.headPos[0] = GRID_SIZE / 2;
     snek.headPos[1] = GRID_SIZE / 2;
-    printf("dbg\n");
     placeApple();
-    printf("dbg\n");
     gamePaused = 1;
 
     if (loserText.font == NULL || menuText.font == NULL || pointText.font == NULL) {
@@ -249,7 +247,7 @@ void update() {
     char PointMessage[] = "Length:";
     char renderPointsText[12];
 
-    snprintf(renderPointsText, 12, "%s %d", PointMessage, snek.length);
+    snprintf(renderPointsText, 12, "%s %u", PointMessage, snek.length);
 
     
 
@@ -274,14 +272,13 @@ void render(void) {
             if (grid[i][j] > 0) {
                 snek.rect.x = i * SNEK_THICC;
                 snek.rect.y = j * SNEK_THICC;
-                SDL_SetRenderDrawColor(renderer, 0, 50 + grid[i][j] * 15, 0, 255);
+                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
                 SDL_RenderFillRect(renderer, &snek.rect);
             }
         }
     }
 
     SDL_RenderCopy(renderer, pointText.texture, NULL, &pointText.rect);
-    SDL_FreeSurface(pointText.message);
     SDL_DestroyTexture(pointText.texture);
 
     if (gamePaused) {
@@ -292,6 +289,8 @@ void render(void) {
 }
 
 void destroyWindow(void) {
+    SDL_FreeSurface(menuText.message);
+    SDL_DestroyTexture(menuText.texture);
     SDL_FreeSurface(loserText.message);
     SDL_DestroyTexture(loserText.texture);
     SDL_DestroyRenderer(renderer);
