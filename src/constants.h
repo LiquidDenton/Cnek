@@ -2,6 +2,5 @@
 #define SNEK_THICC 20
 #define GRID_SIZE 50
 
-
-#define FPS 5
-#define DESIRED_FRAME_TIME (1000 / FPS)
+#define SPEED_INCREASE_FACTOR 0.2
+#define SPEED_OFFSET 8
