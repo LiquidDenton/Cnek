@@ -153,7 +153,7 @@ void update() {
         if (snekHeadPos[0] >= GRID_SIZE || snekHeadPos[1] >= GRID_SIZE || snekHeadPos[0] < 0 || snekHeadPos[1] < 0 || grid[snekHeadPos[0]][snekHeadPos[1]] > 0) {
             printf("\nL\n");
             setup();
-            return NULL;
+            return;
         }
         grid[snekHeadPos[0]][snekHeadPos[1]] = snekLength + 1;
         if (snekHeadPos[0] == applePos[0] && snekHeadPos[1] == applePos[1]) {
