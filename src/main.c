@@ -1,9 +1,13 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_keycode.h>
+#include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_rect.h>
+#include <SDL2/SDL_render.h>
+#include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_timer.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include "./constants.h"
 #include <time.h>
 #include <stdlib.h>
@@ -13,16 +17,27 @@ SDL_Renderer* renderer;
 short int gameIsRunning;
 short int gamePaused;
 
-short int snekHeadPos[2];
-short int snekLength;
-
 short int applePos[2];
- 
+
+struct Text {
+    SDL_Color color;
+    TTF_Font* font;
+    SDL_Surface* message;
+    SDL_Rect rect;
+    SDL_Texture* texture;
+};
+
+struct Snek {
+    short int headPos[2];
+    short int length;
+    short int dir;
+    SDL_Rect rect;
+};
+
+struct Snek snek;
+struct Text loserText;
+
 int lastFrameTicks;
-
-short int snekDir;
-
-SDL_Rect snekRect;
 
 SDL_Rect apple;
 
@@ -43,6 +58,7 @@ short int initSDL(void) {
         perror("Error initialising SDL renderer\n");
         return 0;
     }
+    TTF_Init();
     return 1;
 
 }
@@ -63,8 +79,9 @@ void placeApple() {
 }
 
 void setup(void) {
-    snekRect.h = SNEK_THICC;
-    snekRect.w = SNEK_THICC;
+
+    snek.rect.h = SNEK_THICC;
+    snek.rect.w = SNEK_THICC;
     apple.h = SNEK_THICC;
     apple.w = SNEK_THICC;
 
@@ -74,20 +91,37 @@ void setup(void) {
         }
     }
 
-    snekDir = 3;
+    loserText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 24);
+    loserText.color.r = 150;
+    loserText.color.g = 150;
+    loserText.color.b = 150;
+    loserText.color.a = 255;
 
-    snekLength = 2;
+    loserText.message = TTF_RenderText_Solid(loserText.font, "L", loserText.color);
+    loserText.rect.h = 80;
+    loserText.rect.w = 50;
+    loserText.rect.x = WINDOW_SIZE / 2;
+    loserText.rect.y = WINDOW_SIZE / 2;
+    loserText.texture = SDL_CreateTextureFromSurface(renderer, loserText.message);
+
+    snek.dir = 3;
+
+    snek.length = 2;
 
     lastFrameTicks = SDL_GetTicks();
 
-    snekHeadPos[0] = GRID_SIZE / 2;
-    snekHeadPos[1] = GRID_SIZE / 2;
+    snek.headPos[0] = GRID_SIZE / 2;
+    snek.headPos[1] = GRID_SIZE / 2;
 
     srand(time(NULL));
 
     placeApple();
 
     gamePaused = 1;
+
+    if (loserText.font == NULL) {
+        exit(1);
+    }
 }
 
 void processInput() {
@@ -100,23 +134,23 @@ void processInput() {
         case SDL_KEYDOWN:
             switch (event.key.keysym.sym) {
                 case SDLK_DOWN:
-                    if (snekDir != 3) {
-                    snekDir = 1;
+                    if (snek.dir != 3) {
+                    snek.dir = 1;
                     }
                     break;
                 case SDLK_UP:
-                    if (snekDir != 1) {
-                    snekDir = 3;
+                    if (snek.dir != 1) {
+                    snek.dir = 3;
                     }
                     break;
                 case SDLK_RIGHT:
-                    if (snekDir != 2) {
-                    snekDir = 0;
+                    if (snek.dir != 2) {
+                    snek.dir = 0;
                     }
                     break;
                 case SDLK_LEFT:
-                    if (snekDir != 0) {
-                    snekDir = 2;
+                    if (snek.dir != 0) {
+                    snek.dir = 2;
                     }
                     break;
                 case SDLK_ESCAPE:
@@ -133,30 +167,30 @@ void processInput() {
 void update() {
     if (SDL_TICKS_PASSED(SDL_GetTicks(), lastFrameTicks + DESIRED_FRAME_TIME) && !gamePaused) {
         lastFrameTicks = SDL_GetTicks();
-        switch (snekDir) {
+        switch (snek.dir) {
             case 0:
-                snekHeadPos[0] += 1;
+                snek.headPos[0] += 1;
                 break;
             case 1: 
-                snekHeadPos[1] += 1;
+                snek.headPos[1] += 1;
                 break;
             case 2:
-                snekHeadPos[0] -= 1;
+                snek.headPos[0] -= 1;
                 break;
             case 3: 
-                snekHeadPos[1] -= 1;
+                snek.headPos[1] -= 1;
                 break;
         }
 
-        // printf("x: %d y: %d\n", snekHeadPos[0], snekHeadPos[1]);
+        // printf("x: %d y: %d\n", snek.headPos[0], snek.headPos[1]);
 
-        if (snekHeadPos[0] >= GRID_SIZE || snekHeadPos[1] >= GRID_SIZE || snekHeadPos[0] < 0 || snekHeadPos[1] < 0 || grid[snekHeadPos[0]][snekHeadPos[1]] > 0) {
+        if (snek.headPos[0] >= GRID_SIZE || snek.headPos[1] >= GRID_SIZE || snek.headPos[0] < 0 || snek.headPos[1] < 0 || grid[snek.headPos[0]][snek.headPos[1]] > 0) {
             printf("\nL\n");
             setup();
             return;
         }
-        grid[snekHeadPos[0]][snekHeadPos[1]] = snekLength + 1;
-        if (snekHeadPos[0] == applePos[0] && snekHeadPos[1] == applePos[1]) {
+        grid[snek.headPos[0]][snek.headPos[1]] = snek.length + 1;
+        if (snek.headPos[0] == applePos[0] && snek.headPos[1] == applePos[1]) {
             for (int i = 0; i < GRID_SIZE; i++) {
                 for (int j = 0; j < GRID_SIZE; j++) {
                     if (grid[i][j] > 0) {
@@ -165,7 +199,7 @@ void update() {
                 }
             }
             placeApple();
-            snekLength += 1;
+            snek.length += 1;
         }
 
 
@@ -193,20 +227,26 @@ void render(void) {
     for (int i = 0; i < GRID_SIZE; i++) {
         for (int j = 0; j < GRID_SIZE; j++) {
             if (grid[i][j] > 0) {
-                snekRect.x = i * SNEK_THICC;
-                snekRect.y = j * SNEK_THICC;
+                snek.rect.x = i * SNEK_THICC;
+                snek.rect.y = j * SNEK_THICC;
                 SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-                SDL_RenderFillRect(renderer, &snekRect);
+                SDL_RenderFillRect(renderer, &snek.rect);
             }
         }
     }
 
 
 
+
+    if (gamePaused) {
+        SDL_RenderCopy(renderer, loserText.texture, NULL, &loserText.rect);
+    }
     SDL_RenderPresent(renderer);
 }
 
 void destroyWindow(void) {
+    SDL_FreeSurface(loserText.message);
+    SDL_DestroyTexture(loserText.texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
