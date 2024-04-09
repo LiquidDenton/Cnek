@@ -274,13 +274,11 @@ void render(void) {
             if (grid[i][j] > 0) {
                 snek.rect.x = i * SNEK_THICC;
                 snek.rect.y = j * SNEK_THICC;
-                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+                SDL_SetRenderDrawColor(renderer, 0, 50 + grid[i][j] * 15, 0, 255);
                 SDL_RenderFillRect(renderer, &snek.rect);
             }
         }
     }
-
-    // see if segfault still exists
 
     SDL_RenderCopy(renderer, pointText.texture, NULL, &pointText.rect);
     SDL_FreeSurface(pointText.message);
