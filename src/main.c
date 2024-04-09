@@ -62,38 +62,6 @@ short int initSDL(void) {
         return 0;
     }
     TTF_Init();
-    return 1;
-
-}
-
-void placeApple() {
-    
-    while (1) {
-        applePos[0] = rand() % GRID_SIZE;
-        applePos[1] = rand() % GRID_SIZE;
-
-        if (grid[applePos[0]][applePos[1]] > 0) {
-            continue;
-        }
-        break;
-    }
-
-
-}
-
-void setup(void) {
-
-    snek.rect.h = SNEK_THICC;
-    snek.rect.w = SNEK_THICC;
-    apple.h = SNEK_THICC;
-    apple.w = SNEK_THICC;
-
-    for (int i = 0; i < GRID_SIZE; i++) {
-        for (int j = 0; j < GRID_SIZE; j++) {
-            grid[i][j] = 0;
-        }
-    }
-
     loserText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 24);
     loserText.color.r = 150;
     loserText.color.g = 150;
@@ -131,6 +99,40 @@ void setup(void) {
     pointText.rect.x = 0;
     pointText.rect.y = 0;
 
+    srand(time(NULL));
+
+    return 1;
+
+}
+
+void placeApple() {
+    
+    while (1) {
+        applePos[0] = rand() % GRID_SIZE;
+        applePos[1] = rand() % GRID_SIZE;
+
+        if (grid[applePos[0]][applePos[1]] > 0) {
+            continue;
+        }
+        break;
+    }
+
+
+}
+
+void setup(void) {
+
+    snek.rect.h = SNEK_THICC;
+    snek.rect.w = SNEK_THICC;
+    apple.h = SNEK_THICC;
+    apple.w = SNEK_THICC;
+
+    for (int i = 0; i < GRID_SIZE; i++) {
+        for (int j = 0; j < GRID_SIZE; j++) {
+            grid[i][j] = 0;
+        }
+    }
+
     snek.dir = 3;
 
     snek.length = 2;
@@ -139,14 +141,12 @@ void setup(void) {
 
     snek.headPos[0] = GRID_SIZE / 2;
     snek.headPos[1] = GRID_SIZE / 2;
-
-    srand(time(NULL));
-
+    printf("dbg\n");
     placeApple();
-
+    printf("dbg\n");
     gamePaused = 1;
 
-    if (loserText.font == NULL) {
+    if (loserText.font == NULL || menuText.font == NULL || pointText.font == NULL) {
         exit(1);
     }
 }
@@ -242,6 +242,7 @@ void update() {
                 }
             }
         }
+        inputLock = 0;
 
     }
 
@@ -255,7 +256,7 @@ void update() {
     pointText.message = TTF_RenderText_Solid(pointText.font, renderPointsText, pointText.color);
     pointText.texture = SDL_CreateTextureFromSurface(renderer, pointText.message);
 
-    inputLock = 0;
+
 
 }
 
@@ -279,9 +280,11 @@ void render(void) {
         }
     }
 
-
+    
 
     SDL_RenderCopy(renderer, pointText.texture, NULL, &pointText.rect);
+    SDL_FreeSurface(pointText.message);
+    SDL_DestroyTexture(pointText.texture);
 
     if (gamePaused) {
         SDL_RenderCopy(renderer, loserText.texture, NULL, &loserText.rect);
