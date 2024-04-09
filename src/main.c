@@ -280,7 +280,7 @@ void render(void) {
         }
     }
 
-    
+    // see if segfault still exists
 
     SDL_RenderCopy(renderer, pointText.texture, NULL, &pointText.rect);
     SDL_FreeSurface(pointText.message);
