@@ -1,7 +1,7 @@
-#define WINDOW_SIZE 500
-#define SNEK_THICC 25
-#define GRID_SIZE (WINDOW_SIZE / SNEK_THICC)
+#define WINDOW_SIZE (SNEK_THICC * GRID_SIZE)
+#define SNEK_THICC 20
+#define GRID_SIZE 50
 
 
-#define FPS 3
+#define FPS 5
 #define DESIRED_FRAME_TIME (1000 / FPS)
