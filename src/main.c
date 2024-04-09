@@ -1,3 +1,5 @@
+#include <SDL2/SDL_events.h>
+#include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_timer.h>
 #include <stdio.h>
@@ -69,6 +71,22 @@ void processInput() {
         case SDL_QUIT: 
             gameIsRunning = 0;
             break; 
+        case SDL_KEYDOWN:
+            switch (event.key.keysym.sym) {
+                case SDLK_DOWN:
+                    snekDir = 1;
+                    break;
+                case SDLK_UP:
+                    snekDir = 3;
+                    break;
+                case SDLK_RIGHT:
+                    snekDir = 0;
+                    break;
+                case SDLK_LEFT:
+                    snekDir = 2;
+                    break;
+            }
+            break;
     }
 }
 
@@ -90,9 +108,11 @@ void update() {
                 break;
         }
 
-        snekDir++;
-        if (snekDir > 3) {
-            snekDir = 0;
+        printf("x: %d y: %d\n", snekHeadPos[0], snekHeadPos[1]);
+
+        if (snekHeadPos[0] >= GRID_SIZE || snekHeadPos[1] >= GRID_SIZE || snekHeadPos[0] < 0 || snekHeadPos[1] < 0) {
+            printf("\nL\n");
+            gameIsRunning = 0;
         }
 
         grid[snekHeadPos[0]][snekHeadPos[1]] = snekLength + 1;
