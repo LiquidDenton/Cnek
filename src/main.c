@@ -5,13 +5,18 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include "./constants.h"
+#include <time.h>
+#include <stdlib.h>
 
 SDL_Window* window;
 SDL_Renderer* renderer;
 short int gameIsRunning;
+short int gamePaused;
 
 short int snekHeadPos[2];
 short int snekLength;
+
+short int applePos[2];
  
 int lastFrameTicks;
 
@@ -42,6 +47,21 @@ short int initSDL(void) {
 
 }
 
+void placeApple() {
+    
+    while (1) {
+        applePos[0] = rand() % GRID_SIZE;
+        applePos[1] = rand() % GRID_SIZE;
+
+        if (grid[applePos[0]][applePos[1]] > 0) {
+            continue;
+        }
+        break;
+    }
+
+
+}
+
 void setup(void) {
     snekRect.h = SNEK_THICC;
     snekRect.w = SNEK_THICC;
@@ -54,14 +74,20 @@ void setup(void) {
         }
     }
 
-    snekDir = 0;
+    snekDir = 3;
 
-    snekLength = 3;
+    snekLength = 2;
 
     lastFrameTicks = SDL_GetTicks();
 
     snekHeadPos[0] = GRID_SIZE / 2;
     snekHeadPos[1] = GRID_SIZE / 2;
+
+    srand(time(NULL));
+
+    placeApple();
+
+    gamePaused = 1;
 }
 
 void processInput() {
@@ -74,16 +100,30 @@ void processInput() {
         case SDL_KEYDOWN:
             switch (event.key.keysym.sym) {
                 case SDLK_DOWN:
+                    if (snekDir != 3) {
                     snekDir = 1;
+                    }
                     break;
                 case SDLK_UP:
+                    if (snekDir != 1) {
                     snekDir = 3;
+                    }
                     break;
                 case SDLK_RIGHT:
+                    if (snekDir != 2) {
                     snekDir = 0;
+                    }
                     break;
                 case SDLK_LEFT:
+                    if (snekDir != 0) {
                     snekDir = 2;
+                    }
+                    break;
+                case SDLK_ESCAPE:
+                    gamePaused = 1;
+                    break;
+                case SDLK_SPACE:
+                    gamePaused = 0;
                     break;
             }
             break;
@@ -91,7 +131,7 @@ void processInput() {
 }
 
 void update() {
-    if (SDL_TICKS_PASSED(SDL_GetTicks(), lastFrameTicks + DESIRED_FRAME_TIME)){
+    if (SDL_TICKS_PASSED(SDL_GetTicks(), lastFrameTicks + DESIRED_FRAME_TIME) && !gamePaused) {
         lastFrameTicks = SDL_GetTicks();
         switch (snekDir) {
             case 0:
@@ -108,14 +148,27 @@ void update() {
                 break;
         }
 
-        printf("x: %d y: %d\n", snekHeadPos[0], snekHeadPos[1]);
+        // printf("x: %d y: %d\n", snekHeadPos[0], snekHeadPos[1]);
 
-        if (snekHeadPos[0] >= GRID_SIZE || snekHeadPos[1] >= GRID_SIZE || snekHeadPos[0] < 0 || snekHeadPos[1] < 0) {
+        if (snekHeadPos[0] >= GRID_SIZE || snekHeadPos[1] >= GRID_SIZE || snekHeadPos[0] < 0 || snekHeadPos[1] < 0 || grid[snekHeadPos[0]][snekHeadPos[1]] > 0) {
             printf("\nL\n");
-            gameIsRunning = 0;
+            setup();
+            return NULL;
+        }
+        grid[snekHeadPos[0]][snekHeadPos[1]] = snekLength + 1;
+        if (snekHeadPos[0] == applePos[0] && snekHeadPos[1] == applePos[1]) {
+            for (int i = 0; i < GRID_SIZE; i++) {
+                for (int j = 0; j < GRID_SIZE; j++) {
+                    if (grid[i][j] > 0) {
+                        grid[i][j] += 1;
+                    }
+                }
+            }
+            placeApple();
+            snekLength += 1;
         }
 
-        grid[snekHeadPos[0]][snekHeadPos[1]] = snekLength + 1;
+
 
         for (int i = 0; i < GRID_SIZE; i++) {
             for (int j = 0; j < GRID_SIZE; j++) {
@@ -131,6 +184,11 @@ void update() {
 void render(void) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
+
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    apple.x = applePos[0] * SNEK_THICC;
+    apple.y = applePos[1] * SNEK_THICC;
+    SDL_RenderFillRect(renderer, &apple);
 
     for (int i = 0; i < GRID_SIZE; i++) {
         for (int j = 0; j < GRID_SIZE; j++) {
