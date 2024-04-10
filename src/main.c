@@ -1,11 +1,13 @@
 #include <SDL2/SDL_audio.h>
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_hints.h>
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_timer.h>
+#include <SDL2/SDL_video.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -34,7 +36,7 @@ struct Text {
 };
 
 struct Snek {
-    unsigned short int headPos[2];
+    short int headPos[2];
     unsigned short int length;
     unsigned short int dir;
     SDL_Rect rect;
@@ -51,10 +53,20 @@ int lastFrameTicks;
 
 struct Apple {
     SDL_Rect rect;
-    SDL_Surface* surface;
     SDL_Texture* texture;
     short int pos[2];
 };
+
+struct Background {
+    SDL_Color color1;
+    SDL_Color color2;
+    SDL_Rect rect;
+    SDL_Texture* texture;
+    SDL_PixelFormat pixelFormat;
+    SDL_Rect ioRect;
+};
+
+struct Background background;
 
 struct Apple apple;
 
@@ -65,7 +77,7 @@ short int initSDL(void) {
         perror("SDL init failed\n");
         return 0;
     }
-    window = SDL_CreateWindow(NULL, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_SIZE, WINDOW_SIZE, SDL_WINDOW_BORDERLESS);
+    window = SDL_CreateWindow(NULL, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_SIZE, WINDOW_SIZE, SDL_WINDOW_BORDERLESS | SDL_WINDOW_OPENGL);
     if (!window) {
         perror("Error initialising window\n");
         return 0;
@@ -78,6 +90,10 @@ short int initSDL(void) {
     IMG_Init(IMG_INIT_PNG);
     TTF_Init();
     Mix_Init(MIX_INIT_MP3);
+
+    if (!SDL_SetHint("RENDER_SCALE_QUALITY", "1")) {
+        exit(1);
+    }
 
     loserText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 24);
     loserText.color.r = 150;
@@ -116,17 +132,64 @@ short int initSDL(void) {
     pointText.rect.x = 0;
     pointText.rect.y = 0;
 
-    apple.surface = IMG_Load("./apple.png");
-    apple.texture = SDL_CreateTextureFromSurface(renderer, apple.surface);
-    SDL_FreeSurface(apple.surface);
-
+    apple.texture = IMG_LoadTexture(renderer, "./apple.png");
     snek.headSurface = IMG_Load("./head.png");
     snek.headTexture = SDL_CreateTextureFromSurface(renderer, snek.headSurface);
     SDL_FreeSurface(snek.headSurface);
 
+    background.color1.r = 0;
+    background.color1.g = 0;
+    background.color1.b = 100;
+    background.color1.a = 255;
+
+    background.color2.r = 0;
+    background.color2.g = 0;
+    background.color2.b = 50;
+    background.color2.a = 255;
+
+    background.rect.h = SNEK_THICC;
+    background.rect.w = SNEK_THICC;
+
+    background.ioRect.h = WINDOW_SIZE;
+    background.ioRect.w = WINDOW_SIZE;
+    background.ioRect.x = 0;
+    background.ioRect.y = 0;
+
+    background.texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_UNKNOWN, SDL_TEXTUREACCESS_TARGET, WINDOW_SIZE, WINDOW_SIZE);
+
+
+
+    SDL_SetRenderTarget(renderer, background.texture);
+
+    for (int i = 0; i < GRID_SIZE; i++) {
+        for (int j = 0; j < GRID_SIZE; j++) {
+            background.rect.x = i * SNEK_THICC;
+            background.rect.y = j * SNEK_THICC;
+
+            if (i % 2) {
+                if (j % 2) {
+                    SDL_SetRenderDrawColor(renderer, background.color1.r, background.color1.g, background.color1.b, 255);
+                    SDL_RenderFillRect(renderer, &background.rect);
+                    continue;
+                }
+                SDL_SetRenderDrawColor(renderer, background.color2.r, background.color2.g, background.color2.b, 255);
+                SDL_RenderFillRect(renderer, &background.rect);
+                continue;
+            }
+            if (j % 2) {
+                SDL_SetRenderDrawColor(renderer, background.color2.r, background.color2.g, background.color2.b, 255);
+                SDL_RenderFillRect(renderer, &background.rect);
+                continue;
+            }
+            SDL_SetRenderDrawColor(renderer, background.color1.r, background.color1.g, background.color1.b, 255);
+            SDL_RenderFillRect(renderer, &background.rect);
+        }
+    }
+    SDL_SetRenderTarget(renderer, NULL);
+
     srand(time(NULL));
 
-    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 1, 1024);
+    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024);
 
     music = Mix_LoadMUS("./music.mp3");
     munch = Mix_LoadWAV("./munch.wav");
@@ -249,6 +312,13 @@ void update() {
                 snek.headPos[1] -= 1;
                 break;
         }
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                if (grid[i][j] > 0) {
+                    grid[i][j] -= 1;
+                }
+            }
+        }
 
         // printf("x: %d y: %d\n", snek.headPos[0], snek.headPos[1]);
 
@@ -256,7 +326,7 @@ void update() {
             setup();
             return;
         }
-        grid[snek.headPos[0]][snek.headPos[1]] = snek.length + 1;
+        grid[snek.headPos[0]][snek.headPos[1]] = snek.length;
         if (snek.headPos[0] == apple.pos[0] && snek.headPos[1] == apple.pos[1]) {
             for (int i = 0; i < GRID_SIZE; i++) {
                 for (int j = 0; j < GRID_SIZE; j++) {
@@ -265,20 +335,14 @@ void update() {
                     }
                 }
             }
-            placeApple();
             snek.length += 1;
+            placeApple();
             Mix_PlayChannel(-1, munch, 0);
         }
 
 
 
-        for (int i = 0; i < GRID_SIZE; i++) {
-            for (int j = 0; j < GRID_SIZE; j++) {
-                if (grid[i][j] > 0) {
-                    grid[i][j] -= 1;
-                }
-            }
-        }
+
         inputLock = 0;
 
     }
@@ -292,6 +356,8 @@ void update() {
 void render(void) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
+
+    SDL_RenderCopy(renderer, background.texture, 0, 0);
 
     apple.rect.x = apple.pos[0] * SNEK_THICC;
     apple.rect.y = apple.pos[1] * SNEK_THICC;
