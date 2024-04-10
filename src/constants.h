@@ -1,6 +1,6 @@
 #define WINDOW_SIZE (SNEK_THICC * GRID_SIZE)
-#define SNEK_THICC 20
-#define GRID_SIZE 50
+#define SNEK_THICC 30
+#define GRID_SIZE 20
 
 #define SPEED_INCREASE_FACTOR 0.2
 #define SPEED_OFFSET 8
