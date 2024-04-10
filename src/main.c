@@ -1,3 +1,4 @@
+#include <SDL2/SDL_audio.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_pixels.h>
@@ -11,6 +12,8 @@
 #include "./constants.h"
 #include <time.h>
 #include <stdlib.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -18,7 +21,9 @@ short int gameIsRunning;
 short int gamePaused;
 short int inputLock;
 
-short int applePos[2];
+Mix_Music *music;
+Mix_Chunk *munch;
+
 
 struct Text {
     SDL_Color color;
@@ -33,6 +38,8 @@ struct Snek {
     unsigned short int length;
     unsigned short int dir;
     SDL_Rect rect;
+    SDL_Surface *headSurface;
+    SDL_Texture *headTexture;
 };
 
 struct Snek snek;
@@ -42,7 +49,14 @@ struct Text pointText;
 
 int lastFrameTicks;
 
-SDL_Rect apple;
+struct Apple {
+    SDL_Rect rect;
+    SDL_Surface* surface;
+    SDL_Texture* texture;
+    short int pos[2];
+};
+
+struct Apple apple;
 
 short int grid[GRID_SIZE][GRID_SIZE];
 
@@ -61,7 +75,10 @@ short int initSDL(void) {
         perror("Error initialising SDL renderer\n");
         return 0;
     }
+    IMG_Init(IMG_INIT_PNG);
     TTF_Init();
+    Mix_Init(MIX_INIT_MP3);
+
     loserText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 24);
     loserText.color.r = 150;
     loserText.color.g = 150;
@@ -99,19 +116,33 @@ short int initSDL(void) {
     pointText.rect.x = 0;
     pointText.rect.y = 0;
 
+    apple.surface = IMG_Load("./apple.png");
+    apple.texture = SDL_CreateTextureFromSurface(renderer, apple.surface);
+    SDL_FreeSurface(apple.surface);
+
+    snek.headSurface = IMG_Load("./head.png");
+    snek.headTexture = SDL_CreateTextureFromSurface(renderer, snek.headSurface);
+    SDL_FreeSurface(snek.headSurface);
+
     srand(time(NULL));
 
-    return 1;
+    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 1, 1024);
 
+    music = Mix_LoadMUS("./music.mp3");
+    munch = Mix_LoadWAV("./munch.wav");
+
+    Mix_PlayMusic(music, 32000);
+
+    return 1;
 }
 
 void placeApple() {
     
     while (1) {
-        applePos[0] = rand() % GRID_SIZE;
-        applePos[1] = rand() % GRID_SIZE;
+        apple.pos[0] = rand() % GRID_SIZE;
+        apple.pos[1] = rand() % GRID_SIZE;
 
-        if (grid[applePos[0]][applePos[1]] > 0) {
+        if (grid[apple.pos[0]][apple.pos[1]] > 0) {
             continue;
         }
 
@@ -132,8 +163,8 @@ void setup(void) {
 
     snek.rect.h = SNEK_THICC;
     snek.rect.w = SNEK_THICC;
-    apple.h = SNEK_THICC;
-    apple.w = SNEK_THICC;
+    apple.rect.h = SNEK_THICC;
+    apple.rect.w = SNEK_THICC;
 
     for (int i = 0; i < GRID_SIZE; i++) {
         for (int j = 0; j < GRID_SIZE; j++) {
@@ -226,7 +257,7 @@ void update() {
             return;
         }
         grid[snek.headPos[0]][snek.headPos[1]] = snek.length + 1;
-        if (snek.headPos[0] == applePos[0] && snek.headPos[1] == applePos[1]) {
+        if (snek.headPos[0] == apple.pos[0] && snek.headPos[1] == apple.pos[1]) {
             for (int i = 0; i < GRID_SIZE; i++) {
                 for (int j = 0; j < GRID_SIZE; j++) {
                     if (grid[i][j] > 0) {
@@ -236,6 +267,7 @@ void update() {
             }
             placeApple();
             snek.length += 1;
+            Mix_PlayChannel(-1, munch, 0);
         }
 
 
@@ -261,10 +293,9 @@ void render(void) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    apple.x = applePos[0] * SNEK_THICC;
-    apple.y = applePos[1] * SNEK_THICC;
-    SDL_RenderFillRect(renderer, &apple);
+    apple.rect.x = apple.pos[0] * SNEK_THICC;
+    apple.rect.y = apple.pos[1] * SNEK_THICC;
+    SDL_RenderCopy(renderer, apple.texture, 0, &apple.rect);
 
     for (int i = 0; i < GRID_SIZE; i++) {
         for (int j = 0; j < GRID_SIZE; j++) {
@@ -276,6 +307,9 @@ void render(void) {
             }
         }
     }
+    snek.rect.x = snek.headPos[0] * SNEK_THICC;
+    snek.rect.y = snek.headPos[1] * SNEK_THICC;
+    SDL_RenderCopy(renderer, snek.headTexture, 0, &snek.rect);
 
     SDL_RenderCopy(renderer, pointText.texture, NULL, &pointText.rect);
 
@@ -287,12 +321,15 @@ void render(void) {
 }
 
 void destroyWindow(void) {
+    SDL_DestroyTexture(apple.texture);
     SDL_FreeSurface(menuText.message);
     SDL_DestroyTexture(menuText.texture);
     SDL_FreeSurface(loserText.message);
     SDL_DestroyTexture(loserText.texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    TTF_Quit();
+    Mix_Quit();
     SDL_Quit();
 }
 
