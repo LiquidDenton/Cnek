@@ -26,6 +26,8 @@ short int inputLock;
 Mix_Music *music;
 Mix_Chunk *munch;
 
+SDL_Rect menuRect;
+
 
 struct Text {
     SDL_Color color;
@@ -91,7 +93,7 @@ short int initSDL(void) {
     TTF_Init();
     Mix_Init(MIX_INIT_MP3);
 
-    if (!SDL_SetHint("RENDER_SCALE_QUALITY", "1")) {
+    if (!SDL_SetHint("SDL_RENDER_SCALE_QUALITY", "2")) {
         exit(1);
     }
 
@@ -133,9 +135,7 @@ short int initSDL(void) {
     pointText.rect.y = 0;
 
     apple.texture = IMG_LoadTexture(renderer, "./apple.png");
-    snek.headSurface = IMG_Load("./head.png");
-    snek.headTexture = SDL_CreateTextureFromSurface(renderer, snek.headSurface);
-    SDL_FreeSurface(snek.headSurface);
+    snek.headTexture = IMG_LoadTexture(renderer, "./head.png");
 
     background.color1.r = 0;
     background.color1.g = 0;
@@ -184,6 +184,14 @@ short int initSDL(void) {
             SDL_SetRenderDrawColor(renderer, background.color1.r, background.color1.g, background.color1.b, 255);
             SDL_RenderFillRect(renderer, &background.rect);
         }
+
+        menuRect.h = SNEK_THICC * 8;
+        menuRect.w = SNEK_THICC * 8;
+        menuRect.x = (WINDOW_SIZE / 2) - (menuRect.h / 2);
+        menuRect.y = 20;
+
+
+
     }
     SDL_SetRenderTarget(renderer, NULL);
 
@@ -359,23 +367,29 @@ void render(void) {
 
     SDL_RenderCopy(renderer, background.texture, 0, 0);
 
-    apple.rect.x = apple.pos[0] * SNEK_THICC;
-    apple.rect.y = apple.pos[1] * SNEK_THICC;
-    SDL_RenderCopy(renderer, apple.texture, 0, &apple.rect);
+    if (!gamePaused) {
+    
+        apple.rect.x = apple.pos[0] * SNEK_THICC;
+        apple.rect.y = apple.pos[1] * SNEK_THICC;
+        SDL_RenderCopy(renderer, apple.texture, 0, &apple.rect);
 
-    for (int i = 0; i < GRID_SIZE; i++) {
-        for (int j = 0; j < GRID_SIZE; j++) {
-            if (grid[i][j] > 0) {
-                snek.rect.x = i * SNEK_THICC;
-                snek.rect.y = j * SNEK_THICC;
-                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-                SDL_RenderFillRect(renderer, &snek.rect);
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                if (grid[i][j] > 0) {
+                    snek.rect.x = i * SNEK_THICC;
+                    snek.rect.y = j * SNEK_THICC;
+                    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+                    SDL_RenderFillRect(renderer, &snek.rect);
+                }
             }
         }
+        snek.rect.x = snek.headPos[0] * SNEK_THICC;
+        snek.rect.y = snek.headPos[1] * SNEK_THICC;
+        SDL_RenderCopy(renderer, snek.headTexture, 0, &snek.rect);
+
+    } else {
+        SDL_RenderCopy(renderer, snek.headTexture, 0, &menuRect);
     }
-    snek.rect.x = snek.headPos[0] * SNEK_THICC;
-    snek.rect.y = snek.headPos[1] * SNEK_THICC;
-    SDL_RenderCopy(renderer, snek.headTexture, 0, &snek.rect);
 
     SDL_RenderCopy(renderer, pointText.texture, NULL, &pointText.rect);
 
