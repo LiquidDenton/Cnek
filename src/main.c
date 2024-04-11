@@ -99,7 +99,7 @@ short int initSDL(void) {
         exit(1);
     }
 
-    loserText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 50);
+    loserText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeMonoBoldOblique.ttf", 50);
     loserText.color.r = 150;
     loserText.color.g = 150;
     loserText.color.b = 150;
@@ -112,7 +112,7 @@ short int initSDL(void) {
     loserText.rect.y = WINDOW_SIZE / 2 - loserText.rect.h / 2;
     loserText.texture = SDL_CreateTextureFromSurface(renderer, loserText.message);
 
-    menuText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 30);
+    menuText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeMonoBoldOblique.ttf", 30);
     menuText.color.r = 150;
     menuText.color.g = 150;
     menuText.color.b = 150;
@@ -125,7 +125,7 @@ short int initSDL(void) {
     menuText.rect.y = WINDOW_SIZE / 2 + 50;
     menuText.texture = SDL_CreateTextureFromSurface(renderer, menuText.message);
 
-    pointText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 30);
+    pointText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeMonoBoldOblique.ttf", 30);
     pointText.color.r = 150;
     pointText.color.g = 150;
     pointText.color.b = 150;
@@ -139,6 +139,9 @@ short int initSDL(void) {
     apple.texture = IMG_LoadTexture(renderer, "./apple.png");
     snek.headTexture = IMG_LoadTexture(renderer, "./head.png");
     menuTexture = IMG_LoadTexture(renderer, "./MenuTexture.png");
+    SDL_Surface* processImage = IMG_Load("./apple.png");
+    SDL_SetWindowIcon(window, processImage);
+    SDL_FreeSurface(processImage);
 
     background.color1.r = 0;
     background.color1.g = 0;
