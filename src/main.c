@@ -399,7 +399,7 @@ void render(void) {
     if (gamePaused) {
         SDL_Rect foo = menuText.rect;
         
-        foo.y += (int) (sin((double) ((SDL_GetTicks()) / 100)) * MENU_BOUNCEAMOUNT);
+        foo.y += (int) (sin((double) SDL_GetTicks() / 100) * MENU_BOUNCEAMOUNT);
 
         SDL_RenderCopy(renderer, loserText.texture, NULL, &loserText.rect);
         SDL_RenderCopy(renderer, menuText.texture, NULL, &foo);
