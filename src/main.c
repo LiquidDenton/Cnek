@@ -53,6 +53,8 @@ struct Text pointText;
 
 int lastFrameTicks;
 
+SDL_Texture* menuTexture;
+
 struct Apple {
     SDL_Rect rect;
     SDL_Texture* texture;
@@ -97,33 +99,33 @@ short int initSDL(void) {
         exit(1);
     }
 
-    loserText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 24);
+    loserText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 50);
     loserText.color.r = 150;
     loserText.color.g = 150;
     loserText.color.b = 150;
     loserText.color.a = 255;
 
-    loserText.message = TTF_RenderText_Solid(loserText.font, "L", loserText.color);
+    loserText.message = TTF_RenderText_Blended(loserText.font, "Cnek", loserText.color);
     loserText.rect.h = 80;
-    loserText.rect.w = 50;
-    loserText.rect.x = WINDOW_SIZE / 2 - 30;
-    loserText.rect.y = WINDOW_SIZE / 2 - 30;
+    loserText.rect.w = 170;
+    loserText.rect.x = WINDOW_SIZE / 2 - loserText.rect.w / 2;
+    loserText.rect.y = WINDOW_SIZE / 2 - loserText.rect.h / 2;
     loserText.texture = SDL_CreateTextureFromSurface(renderer, loserText.message);
 
-    menuText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 15);
+    menuText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 30);
     menuText.color.r = 150;
     menuText.color.g = 150;
     menuText.color.b = 150;
     menuText.color.a = 255;
 
-    menuText.message = TTF_RenderText_Solid(menuText.font, "Press space to continue", menuText.color);
+    menuText.message = TTF_RenderText_Blended(menuText.font, "Press space to start", menuText.color);
     menuText.rect.h = 30;
     menuText.rect.w = 300;
     menuText.rect.x = WINDOW_SIZE / 2 - 150;
     menuText.rect.y = WINDOW_SIZE / 2 + 50;
     menuText.texture = SDL_CreateTextureFromSurface(renderer, menuText.message);
 
-    pointText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 15);
+    pointText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 30);
     pointText.color.r = 150;
     pointText.color.g = 150;
     pointText.color.b = 150;
@@ -136,6 +138,7 @@ short int initSDL(void) {
 
     apple.texture = IMG_LoadTexture(renderer, "./apple.png");
     snek.headTexture = IMG_LoadTexture(renderer, "./head.png");
+    menuTexture = IMG_LoadTexture(renderer, "./MenuTexture.png");
 
     background.color1.r = 0;
     background.color1.g = 0;
@@ -221,7 +224,7 @@ void placeApple() {
         char PointMessage[] = "Length:";
         char renderPointsText[12];
         snprintf(renderPointsText, 12, "%s %u", PointMessage, snek.length);
-        pointText.message = TTF_RenderText_Solid(pointText.font, renderPointsText, pointText.color);
+        pointText.message = TTF_RenderText_Blended(pointText.font, renderPointsText, pointText.color);
         pointText.texture = SDL_CreateTextureFromSurface(renderer, pointText.message);
 
         break;
@@ -385,17 +388,21 @@ void render(void) {
         }
         snek.rect.x = snek.headPos[0] * SNEK_THICC;
         snek.rect.y = snek.headPos[1] * SNEK_THICC;
-        SDL_RenderCopy(renderer, snek.headTexture, 0, &snek.rect);
+        SDL_RenderCopyEx(renderer, snek.headTexture, 0, &snek.rect, 90 + (90 * snek.dir), NULL, 0);
 
     } else {
-        SDL_RenderCopy(renderer, snek.headTexture, 0, &menuRect);
+        SDL_RenderCopy(renderer, menuTexture, 0, &menuRect);
     }
 
     SDL_RenderCopy(renderer, pointText.texture, NULL, &pointText.rect);
 
     if (gamePaused) {
+        SDL_Rect foo = menuText.rect;
+        
+        foo.y += (int) (sin((double) ((SDL_GetTicks()) / 100)) * MENU_BOUNCEAMOUNT);
+
         SDL_RenderCopy(renderer, loserText.texture, NULL, &loserText.rect);
-        SDL_RenderCopy(renderer, menuText.texture, NULL, &menuText.rect);
+        SDL_RenderCopy(renderer, menuText.texture, NULL, &foo);
     }
     SDL_RenderPresent(renderer);
 }
