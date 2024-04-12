@@ -66,15 +66,13 @@ struct Background {
     SDL_Color color2;
     SDL_Rect rect;
     SDL_Texture* texture;
-    SDL_PixelFormat pixelFormat;
-    SDL_Rect ioRect;
 };
 
 struct Background background;
 
 struct Apple apple;
 
-short int grid[GRID_SIZE][GRID_SIZE];
+Uint8 grid[GRID_SIZE][GRID_SIZE];
 
 short int initSDL(void) {
     if (0 != SDL_Init(SDL_INIT_EVERYTHING)) {
@@ -111,6 +109,7 @@ short int initSDL(void) {
     loserText.rect.x = WINDOW_SIZE / 2 - loserText.rect.w / 2;
     loserText.rect.y = WINDOW_SIZE / 2 - loserText.rect.h / 2;
     loserText.texture = SDL_CreateTextureFromSurface(renderer, loserText.message);
+    SDL_FreeSurface(loserText.message);
 
     menuText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeMonoBoldOblique.ttf", 30);
     menuText.color.r = 150;
@@ -124,6 +123,7 @@ short int initSDL(void) {
     menuText.rect.x = WINDOW_SIZE / 2 - 150;
     menuText.rect.y = WINDOW_SIZE / 2 + 50;
     menuText.texture = SDL_CreateTextureFromSurface(renderer, menuText.message);
+    SDL_FreeSurface(menuText.message);
 
     pointText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeMonoBoldOblique.ttf", 30);
     pointText.color.r = 150;
@@ -155,11 +155,6 @@ short int initSDL(void) {
 
     background.rect.h = SNEK_THICC;
     background.rect.w = SNEK_THICC;
-
-    background.ioRect.h = WINDOW_SIZE;
-    background.ioRect.w = WINDOW_SIZE;
-    background.ioRect.x = 0;
-    background.ioRect.y = 0;
 
     background.texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_UNKNOWN, SDL_TEXTUREACCESS_TARGET, WINDOW_SIZE, WINDOW_SIZE);
 
@@ -411,10 +406,10 @@ void render(void) {
 }
 
 void destroyWindow(void) {
+    SDL_DestroyTexture(menuTexture);
+    SDL_DestroyTexture(snek.headTexture);
     SDL_DestroyTexture(apple.texture);
-    SDL_FreeSurface(menuText.message);
     SDL_DestroyTexture(menuText.texture);
-    SDL_FreeSurface(loserText.message);
     SDL_DestroyTexture(loserText.texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
@@ -430,6 +425,7 @@ int main() {
     setup();
 
     while (gameIsRunning) {
+        SDL_Delay(FRAME_TIME);
         processInput();
         update();
         render();
