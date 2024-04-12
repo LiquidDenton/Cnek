@@ -6,3 +6,6 @@
 
 #define SPEED_INCREASE_FACTOR 0.05
 #define SPEED_OFFSET 8
+
+#define FPS 60
+#define FRAME_TIME (1000/FPS)
