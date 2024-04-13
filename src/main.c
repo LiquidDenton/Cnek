@@ -338,12 +338,58 @@ void update() {
         }
         grid[snek.headPos[0]][snek.headPos[1]] = snek.length;
         if (snek.headPos[0] == apple.pos[0] && snek.headPos[1] == apple.pos[1]) {
-            for (int i = 0; i < GRID_SIZE; i++) {
-                for (int j = 0; j < GRID_SIZE; j++) {
-                    if (grid[i][j] > 0) {
-                        grid[i][j] += 1;
+
+            Uint8 currentPos[2];
+            currentPos[0] = snek.headPos[0];
+            currentPos[1] = snek.headPos[1];
+            Uint8 stopScan;
+            Uint8 endOfSnek = 0;
+
+            while (!endOfSnek) {
+                stopScan = 0;
+                for (int i = 0; i < 5 && !stopScan; i++) {
+                    switch (i) {
+                        case 0:
+                            if (grid[currentPos[0] + 1][currentPos[1]] == grid[currentPos[0]][currentPos[1]] - 1 && grid[currentPos[0] + 1][currentPos[1]] > 0) {
+                                grid[currentPos[0]][currentPos[1]] += 1;
+
+                                currentPos[0] += 1;
+                                stopScan = 1;
+                                continue;
+                            }
+                        case 1:
+                            if (grid[currentPos[0]][currentPos[1] + 1] == grid[currentPos[0]][currentPos[1]] - 1 && grid[currentPos[0]][currentPos[1] + 1] > 0) {
+                                grid[currentPos[0]][currentPos[1]] += 1;
+                                currentPos[1] += 1;
+                                stopScan = 1;
+                                continue;
+                            }
+                        case 2:
+                            if (!currentPos[0]) {
+                                continue;
+                            }
+                            if (grid[currentPos[0] - 1][currentPos[1]] == grid[currentPos[0]][currentPos[1]] - 1 && grid[currentPos[0] - 1][currentPos[1]] > 0) {
+                                grid[currentPos[0]][currentPos[1]] += 1;
+                                currentPos[0] -= 1;
+                                stopScan = 1;
+                                continue;
+                            }
+                        case 3:
+                            if (!currentPos[1]) {
+                                continue;
+                            }
+                            if (grid[currentPos[0]][currentPos[1] - 1] == grid[currentPos[0]][currentPos[1]] - 1 && grid[currentPos[0]][currentPos[1] - 1] > 0) {
+                                grid[currentPos[0]][currentPos[1]] += 1;
+                                currentPos[1] -= 1;
+                                stopScan = 1;
+                                continue;
+                            }
+                        case 4:
+                            stopScan = 1;
+                            endOfSnek = 1;
+                            continue;
                     }
-                }
+                } 
             }
             snek.length += 1;
             placeApple();
