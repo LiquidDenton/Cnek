@@ -5,6 +5,7 @@
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
+#include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
@@ -38,7 +39,7 @@ struct Text {
 };
 
 struct Snek {
-    short int headPos[2];
+    Uint8 headPos[2];
     unsigned short int length;
     unsigned short int dir;
     SDL_Rect rect;
@@ -331,7 +332,7 @@ void update() {
 
         // printf("x: %d y: %d\n", snek.headPos[0], snek.headPos[1]);
 
-        if (snek.headPos[0] >= GRID_SIZE || snek.headPos[1] >= GRID_SIZE || snek.headPos[0] < 0 || snek.headPos[1] < 0 || grid[snek.headPos[0]][snek.headPos[1]] > 0) {
+        if (snek.headPos[0] >= GRID_SIZE || snek.headPos[1] >= GRID_SIZE || grid[snek.headPos[0]][snek.headPos[1]] > 0) {
             setup();
             return;
         }
@@ -374,15 +375,68 @@ void render(void) {
         apple.rect.y = apple.pos[1] * SNEK_THICC;
         SDL_RenderCopy(renderer, apple.texture, 0, &apple.rect);
 
-        for (int i = 0; i < GRID_SIZE; i++) {
-            for (int j = 0; j < GRID_SIZE; j++) {
-                if (grid[i][j] > 0) {
-                    snek.rect.x = i * SNEK_THICC;
-                    snek.rect.y = j * SNEK_THICC;
-                    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-                    SDL_RenderFillRect(renderer, &snek.rect);
+        Uint8 currentPos[2];
+        currentPos[0] = snek.headPos[0];
+        currentPos[1] = snek.headPos[1];
+        Uint8 stopScan;
+        Uint8 endOfSnek = 0;
+
+        while (!endOfSnek) {
+            stopScan = 0;
+            for (int i = 0; i < 5 && !stopScan; i++) {
+                switch (i) {
+                    case 0:
+                        if (grid[currentPos[0] + 1][currentPos[1]] == grid[currentPos[0]][currentPos[1]] - 1 && grid[currentPos[0] + 1][currentPos[1]] > 0) {
+                            currentPos[0] += 1;
+                            snek.rect.x = currentPos[0] * SNEK_THICC;
+                            snek.rect.y = currentPos[1] * SNEK_THICC;
+                            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+                            SDL_RenderFillRect(renderer, &snek.rect);
+                            stopScan = 1;
+                            continue;
+                        }
+                    case 1:
+                        if (grid[currentPos[0]][currentPos[1] + 1] == grid[currentPos[0]][currentPos[1]] - 1 && grid[currentPos[0]][currentPos[1] + 1] > 0) {
+                            currentPos[1] += 1;
+                            snek.rect.x = currentPos[0] * SNEK_THICC;
+                            snek.rect.y = currentPos[1] * SNEK_THICC;
+                            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+                            SDL_RenderFillRect(renderer, &snek.rect);
+                            stopScan = 1;
+                            continue;
+                        }
+                    case 2:
+                        if (!currentPos[0]) {
+                            continue;
+                        }
+                        if (grid[currentPos[0] - 1][currentPos[1]] == grid[currentPos[0]][currentPos[1]] - 1 && grid[currentPos[0] - 1][currentPos[1]] > 0) {
+                            currentPos[0] -= 1;
+                            snek.rect.x = currentPos[0] * SNEK_THICC;
+                            snek.rect.y = currentPos[1] * SNEK_THICC;
+                            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+                            SDL_RenderFillRect(renderer, &snek.rect);
+                            stopScan = 1;
+                            continue;
+                        }
+                    case 3:
+                        if (!currentPos[1]) {
+                            continue;
+                        }
+                        if (grid[currentPos[0]][currentPos[1] - 1] == grid[currentPos[0]][currentPos[1]] - 1 && grid[currentPos[0]][currentPos[1] - 1] > 0) {
+                            currentPos[1] -= 1;
+                            snek.rect.x = currentPos[0] * SNEK_THICC;
+                            snek.rect.y = currentPos[1] * SNEK_THICC;
+                            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+                            SDL_RenderFillRect(renderer, &snek.rect);
+                            stopScan = 1;
+                            continue;
+                        }
+                    case 4:
+                        stopScan = 1;
+                        endOfSnek = 1;
+                        continue;
                 }
-            }
+            } 
         }
         snek.rect.x = snek.headPos[0] * SNEK_THICC;
         snek.rect.y = snek.headPos[1] * SNEK_THICC;
