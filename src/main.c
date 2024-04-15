@@ -270,25 +270,25 @@ void processInput() {
             break; 
         case SDL_KEYDOWN:
             switch (event.key.keysym.sym) {
-                case SDLK_DOWN:
+                case SDLK_s:
                     if (snek.dir != 3 && !inputLock) {
                     snek.dir = 1;
                     inputLock = 1;
                     }
                     break;
-                case SDLK_UP:
+                case SDLK_w:
                     if (snek.dir != 1 && !inputLock) {
                     snek.dir = 3;
                     inputLock = 1;
                     }
                     break;
-                case SDLK_RIGHT:
+                case SDLK_d:
                     if (snek.dir != 2 && !inputLock) {
                     snek.dir = 0;
                     inputLock = 1;
                     }
                     break;
-                case SDLK_LEFT:
+                case SDLK_a:
                     if (snek.dir != 0 && !inputLock) {
                     snek.dir = 2;
                     inputLock = 1;
