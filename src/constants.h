@@ -5,7 +5,7 @@
 #define MENU_BOUNCEAMOUNT 5
 
 #define SPEED_INCREASE_FACTOR 0.05
-#define SPEED_OFFSET 8
+#define SPEED_OFFSET 5
 
 #define FPS 60
 #define FRAME_TIME (1000/FPS)
