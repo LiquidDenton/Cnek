@@ -234,6 +234,8 @@ void placeApple() {
 
 void setup(void) {
 
+    printf("%d\n", snek.length);
+
     snek.rect.h = SNEK_THICC;
     snek.rect.w = SNEK_THICC;
     apple.rect.h = SNEK_THICC;
@@ -270,25 +272,29 @@ void processInput() {
             break; 
         case SDL_KEYDOWN:
             switch (event.key.keysym.sym) {
-                case SDLK_s:
+                case SDLK_DOWN:
+§§§§§§§§case SDLK_s:
                     if (snek.dir != 3 && !inputLock) {
                     snek.dir = 1;
                     inputLock = 1;
                     }
                     break;
-                case SDLK_w:
+                case SDLK_UP:
+		case SDLK_w:
                     if (snek.dir != 1 && !inputLock) {
                     snek.dir = 3;
                     inputLock = 1;
                     }
                     break;
-                case SDLK_d:
+                case SDLK_RIGHT:
+		case SDLK_d:
                     if (snek.dir != 2 && !inputLock) {
                     snek.dir = 0;
                     inputLock = 1;
                     }
                     break;
-                case SDLK_a:
+                case SDLK_LEFT:
+		case SDLK_a:
                     if (snek.dir != 0 && !inputLock) {
                     snek.dir = 2;
                     inputLock = 1;
