@@ -336,6 +336,7 @@ void update() {
             setup();
             return;
         }
+        grid[snek.headPos[0]][snek.headPos[1]] = snek.length + 1;
         if (snek.headPos[0] == apple.pos[0] && snek.headPos[1] == apple.pos[1]) {
 
             Uint8 currentPos[2];
@@ -401,7 +402,7 @@ void update() {
                 }
             }
         }
-        grid[snek.headPos[0]][snek.headPos[1]] = snek.length;
+
 
 
 /*
