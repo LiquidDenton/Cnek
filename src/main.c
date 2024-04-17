@@ -328,13 +328,7 @@ void update() {
                 snek.headPos[1] -= 1;
                 break;
         }
-        for (int i = 0; i < GRID_SIZE; i++) {
-            for (int j = 0; j < GRID_SIZE; j++) {
-                if (grid[i][j] > 0) {
-                    grid[i][j] -= 1;
-                }
-            }
-        }
+
 
         // printf("x: %d y: %d\n", snek.headPos[0], snek.headPos[1]);
 
@@ -401,10 +395,25 @@ void update() {
             placeApple();
             Mix_PlayChannel(-1, munch, 0);
         }
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                if (grid[i][j] > 0) {
+                    grid[i][j] -= 1;
+                }
+            }
+        }
 
 
+/*
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                printf("%d ", grid[j][i]);
+            }
+            printf("\n");
+        }
 
-
+        printf("\n");
+*/
         inputLock = 0;
 
     }
