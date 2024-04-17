@@ -273,7 +273,7 @@ void processInput() {
         case SDL_KEYDOWN:
             switch (event.key.keysym.sym) {
                 case SDLK_DOWN:
-§§§§§§§§case SDLK_s:
+        case SDLK_s:
                     if (snek.dir != 3 && !inputLock) {
                     snek.dir = 1;
                     inputLock = 1;
