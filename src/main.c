@@ -22,7 +22,8 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 short int gameIsRunning;
 short int gamePaused;
-short int inputLock;
+
+short int inputBuffer[2];
 
 Mix_Music *music;
 Mix_Chunk *munch;
@@ -41,10 +42,14 @@ struct Text {
 struct Snek {
     Uint8 headPos[2];
     unsigned short int length;
-    unsigned short int dir;
     SDL_Rect rect;
     SDL_Surface *headSurface;
     SDL_Texture *headTexture;
+    unsigned short int dir; 
+};
+
+struct TypeForMyStupidMath {
+    Uint8 dir : 2;
 };
 
 struct Snek snek;
@@ -273,31 +278,36 @@ void processInput() {
         case SDL_KEYDOWN:
             switch (event.key.keysym.sym) {
                 case SDLK_DOWN:
-        case SDLK_s:
-                    if (snek.dir != 3 && !inputLock) {
-                    snek.dir = 1;
-                    inputLock = 1;
+                case SDLK_s:
+                    if (snek.dir != 3 && inputBuffer[0] < 0) {
+                        inputBuffer[0] = 1;
+                    } else if (snek.dir != 3 && inputBuffer[1] < 0) {
+                        inputBuffer[1] = 1;
                     }
+
                     break;
                 case SDLK_UP:
-		case SDLK_w:
-                    if (snek.dir != 1 && !inputLock) {
-                    snek.dir = 3;
-                    inputLock = 1;
+		        case SDLK_w:
+                    if (snek.dir != 1 && inputBuffer[0] < 0) {
+                        inputBuffer[0] = 3;
+                    } else if (snek.dir != 1 && inputBuffer[1] < 0) {
+                        inputBuffer[1] = 3;
                     }
                     break;
                 case SDLK_RIGHT:
-		case SDLK_d:
-                    if (snek.dir != 2 && !inputLock) {
-                    snek.dir = 0;
-                    inputLock = 1;
+		        case SDLK_d:
+                    if (snek.dir != 2 && inputBuffer[0] < 0) {
+                        inputBuffer[0] = 0;
+                    } else if (snek.dir != 1 && inputBuffer[1] < 0) {
+                        inputBuffer[1] = 0;
                     }
                     break;
                 case SDLK_LEFT:
-		case SDLK_a:
-                    if (snek.dir != 0 && !inputLock) {
-                    snek.dir = 2;
-                    inputLock = 1;
+		        case SDLK_a:
+                    if (snek.dir != 0 && inputBuffer[0] < 0) {
+                        inputBuffer[0] = 2;
+                    } else if (snek.dir != 1 && inputBuffer[1] < 0) {
+                        inputBuffer[1] = 2;
                     }
                     break;
                 case SDLK_ESCAPE:
@@ -314,6 +324,17 @@ void processInput() {
 void update() {
     if (SDL_TICKS_PASSED(SDL_GetTicks(), lastFrameTicks + 1000 / ((snek.length * SPEED_INCREASE_FACTOR) + SPEED_OFFSET)) && !gamePaused) {
         lastFrameTicks = SDL_GetTicks();
+
+        struct TypeForMyStupidMath foo;
+        foo.dir = snek.dir;
+        foo.dir += 2;
+
+       if (inputBuffer[0] >= 0 && inputBuffer[0] != foo.dir) {
+            snek.dir = inputBuffer[0];
+        }
+
+        inputBuffer[0] = inputBuffer[1];
+        inputBuffer[1] = -1;
         switch (snek.dir) {
             case 0:
                 snek.headPos[0] += 1;
@@ -415,8 +436,6 @@ void update() {
 
         printf("\n");
 */
-        inputLock = 0;
-
     }
 
 
