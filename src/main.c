@@ -103,7 +103,7 @@ short int initSDL(void) {
         exit(1);
     }
 
-    title.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeMonoBoldOblique.ttf", 50);
+    title.font = TTF_OpenFont("./fonts/font.ttf", 50);
     title.color.r = 50;
     title.color.g = 50;
     title.color.b = 50;
@@ -117,7 +117,7 @@ short int initSDL(void) {
     title.texture = SDL_CreateTextureFromSurface(renderer, title.message);
     SDL_FreeSurface(title.message);
 
-    menuText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeMonoBoldOblique.ttf", 30);
+    menuText.font = TTF_OpenFont("./fonts/font.ttf", 30);
     menuText.color.r = 50;
     menuText.color.g = 50;
     menuText.color.b = 50;
@@ -131,7 +131,7 @@ short int initSDL(void) {
     menuText.texture = SDL_CreateTextureFromSurface(renderer, menuText.message);
     SDL_FreeSurface(menuText.message);
 
-    pointText.font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeMonoBoldOblique.ttf", 30);
+    pointText.font = TTF_OpenFont("./fonts/font.ttf", 30);
     pointText.color.r = 50;
     pointText.color.g = 50;
     pointText.color.b = 50;
