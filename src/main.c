@@ -549,7 +549,9 @@ int main() {
     setup();
 
     while (gameIsRunning) {
-        SDL_Delay(FRAME_TIME);
+	if (FRAME_TIME)  {
+        	SDL_Delay(FRAME_TIME);
+	}
         processInput();
         update();
         render();
