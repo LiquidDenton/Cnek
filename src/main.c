@@ -1,3 +1,5 @@
+#include <SDL2/SDL_events.h>
+#include <SDL2/SDL_video.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -67,6 +69,13 @@ struct Background background;
 
 struct Apple apple;
 
+struct WindowPos {
+    short int x;
+    short int y;
+};
+
+struct WindowPos windowPos;
+
 Uint8 grid[GRID_SIZE][GRID_SIZE];
 
 short int initSDL(void) {
@@ -74,7 +83,7 @@ short int initSDL(void) {
         perror("SDL init failed\n");
         return 0;
     }
-    window = SDL_CreateWindow("Cnek", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_SIZE, WINDOW_SIZE, SDL_WINDOW_OPENGL);
+    window = SDL_CreateWindow("Cnek", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_SIZE, WINDOW_SIZE, 0);
     if (!window) {
         perror("Error initialising window\n");
         return 0;
@@ -126,8 +135,8 @@ short int initSDL(void) {
     pointText.color.b = 50;
     pointText.color.a = 255;
 
-    pointText.rect.h = 15;
-    pointText.rect.w = 60;
+    pointText.rect.h = 30;
+    pointText.rect.w = 120;
     pointText.rect.x = 0;
     pointText.rect.y = 0;
 
@@ -307,6 +316,10 @@ void processInput() {
                     break;
             }
             break;
+        case SDL_WINDOWEVENT:
+            if (event.window.event == SDL_WINDOWEVENT_MOVED) {
+                SDL_GetWindowPosition(window,  (int*) &windowPos.x, (int*) &windowPos.y);
+            }
     }
 }
 
@@ -413,7 +426,7 @@ void update() {
             }
         }
 
-
+        SDL_SetWindowPosition(window, windowPos.x + ((snek.headPos[0] - GRID_SIZE / 2) * -SNEK_THICC), windowPos.y + ((snek.headPos[1] - GRID_SIZE / 2) * -SNEK_THICC));
 
 /*
         for (int i = 0; i < GRID_SIZE; i++) {
