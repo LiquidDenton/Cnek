@@ -1,4 +1,4 @@
-#include <SDL2/SDL_events.h>
+#include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
@@ -18,6 +18,7 @@ short int inputBuffer[2];
 
 Mix_Music *music;
 Mix_Chunk *munch;
+Mix_Chunk *gpws;
 
 SDL_Rect menuRect;
 
@@ -77,6 +78,8 @@ struct WindowPos {
 struct WindowPos windowPos;
 
 Uint8 grid[GRID_SIZE][GRID_SIZE];
+
+int gpwsTime;
 
 short int initSDL(void) {
     if (0 != SDL_Init(SDL_INIT_EVERYTHING)) {
@@ -206,11 +209,16 @@ short int initSDL(void) {
 
     music = Mix_LoadMUS("./music.mp3");
     munch = Mix_LoadWAV("./munch.wav");
+    gpws = Mix_LoadWAV("./gpws.wav");
 
     Mix_PlayMusic(music, 32000);
 
+    SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    SDL_GetWindowPosition(window, (int*) &windowPos.x, (int*) &windowPos.y);
+
     return 1;
 }
+
 
 void placeApple() {
     
@@ -316,10 +324,10 @@ void processInput() {
                     break;
             }
             break;
-        case SDL_WINDOWEVENT:
+    /*  case SDL_WINDOWEVENT:
             if (event.window.event == SDL_WINDOWEVENT_MOVED) {
-                SDL_GetWindowPosition(window,  (int*) &windowPos.x, (int*) &windowPos.y);
-            }
+                SDL_GetWindowPosition(window, (int*) &windowPos.x, (int*) &windowPos.y);
+            }*/
     }
 }
 
@@ -426,7 +434,7 @@ void update() {
             }
         }
 
-        SDL_SetWindowPosition(window, windowPos.x + ((snek.headPos[0] - GRID_SIZE / 2) * -SNEK_THICC), windowPos.y + ((snek.headPos[1] - GRID_SIZE / 2) * -SNEK_THICC));
+        // SDL_SetWindowPosition(window, windowPos.x + ((snek.headPos[0] - GRID_SIZE / 2) * -SNEK_THICC), windowPos.y + ((snek.headPos[1] - GRID_SIZE / 2) * -SNEK_THICC));
 
 /*
         for (int i = 0; i < GRID_SIZE; i++) {
@@ -434,10 +442,9 @@ void update() {
                 printf("%d ", grid[j][i]);
             }
             printf("\n");
-        }
-
+        } 
         printf("\n");
-*/
+    */
     }
 
 
@@ -463,6 +470,18 @@ void render(void) {
         currentPos[1] = snek.headPos[1];
         Uint8 stopScan;
         Uint8 endOfSnek = 0;
+
+        if (snek.headPos[0] == 0 || snek.headPos[0] == GRID_SIZE - 1 || snek.headPos[1] == 0 || snek.headPos[1] == GRID_SIZE - 1) {
+
+            SDL_SetWindowPosition(window, windowPos.x + (rand() % 100 - 50), windowPos.y + (rand() % 100 - 50));
+
+            if (SDL_GetTicks() >= gpwsTime) {
+                Mix_PlayChannel(-1, gpws,0);
+                gpwsTime = SDL_GetTicks() + 2000;
+            }
+
+
+        }
 
         while (!endOfSnek) {
             stopScan = 0;
