@@ -1,3 +1,4 @@
+#include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
 #include <stdio.h>
@@ -22,7 +23,6 @@ Mix_Chunk *gpws;
 
 SDL_Rect menuRect;
 
-
 struct Text {
     SDL_Color color;
     TTF_Font* font;
@@ -43,6 +43,8 @@ struct Snek {
 struct TypeForMyStupidMath {
     Uint8 dir : 2;
 };
+
+typedef struct TypeForMyStupidMath typeForMyStupidMath;
 
 struct Snek snek;
 struct Text title;
@@ -79,7 +81,57 @@ struct WindowPos windowPos;
 
 Uint8 grid[GRID_SIZE][GRID_SIZE];
 
+struct AI_Data {
+    Uint8 flags;
+    Uint8 dir;
+    Uint8 grid[GRID_SIZE][GRID_SIZE];
+};
+
+struct AI_Data AIData;
+
+
+
 int gpwsTime;
+
+Uint8 AISquareValue(Uint8 x, Uint8 y, Uint8 targetX, Uint8 targetY) {
+    if (x >= GRID_SIZE || x < 0 || y >= GRID_SIZE || y < 0) {
+        return 255;
+    }
+    if (0 < AIData.grid[x][y]) {
+        return 255;
+    }
+    return abs((x - targetX)) + abs((y - targetY));
+}
+
+Uint8 AIDir(Uint8 x, Uint8 y, Uint8 targetX, Uint8 targetY) {
+
+    Uint8 min = 255;
+
+    typeForMyStupidMath bestDir;
+
+    for (int i = 0; i < GRID_SIZE; i++) {
+        for (int j = 0;j < GRID_SIZE; j++) {
+            AIData.grid[i][j] = grid[i][j];
+        }
+    }
+
+    for (int i = 0; i < 4; i++) {
+        if (snek.dir != 2 && i == 0 && min > AISquareValue(x + 1, y, targetX, targetY)) {
+            min = AISquareValue(x + 1, y, targetX, targetY);
+            bestDir.dir = 0;
+        } else if (snek.dir != 3 && i == 1 && min > AISquareValue(x, y + 1, targetX, targetY)) {
+            min = AISquareValue(x, y + 1, targetX, targetY);
+            bestDir.dir = 1;
+        } else if (snek.dir != 0 && i == 2 && min > AISquareValue(x - 1, y, targetX, targetY)) {
+            min = AISquareValue(x - 1, y, targetX, targetY);
+            bestDir.dir = 2;
+        } else if (snek.dir != 1 && i == 3 && min > AISquareValue(x, y - 1, targetX, targetY)) {
+            min = AISquareValue(x, y - 1, targetX, targetY);
+            bestDir.dir = 3;
+        }
+    }
+    return (Uint8) bestDir.dir;
+}
 
 short int initSDL(void) {
     if (0 != SDL_Init(SDL_INIT_EVERYTHING)) {
@@ -221,6 +273,10 @@ short int initSDL(void) {
 
 
 void placeApple() {
+
+    if (AIData.flags & AI_ENABLED) {
+        AIData.flags |= AI_REPATH;
+    }
     
     while (1) {
         apple.pos[0] = rand() % GRID_SIZE;
@@ -316,6 +372,12 @@ void processInput() {
                         inputBuffer[1] = 2;
                     }
                     break;
+                case SDLK_z:
+                    AIData.flags |= AI_ENABLED;
+                    break;
+                case SDLK_x:
+                    AIData.flags &= 254;
+                    break;
                 case SDLK_ESCAPE:
                     gamePaused = 1;
                     break;
@@ -338,9 +400,10 @@ void update() {
         struct TypeForMyStupidMath foo;
         foo.dir = snek.dir;
         foo.dir += 2;
-
-       if (inputBuffer[0] >= 0 && inputBuffer[0] != foo.dir) {
-            snek.dir = inputBuffer[0];
+        if (AIData.flags & AI_ENABLED) {
+            snek.dir = AIDir(snek.headPos[0], snek.headPos[1], apple.pos[0], apple.pos[1]);
+        } else if (inputBuffer[0] >= 0 && inputBuffer[0] != foo.dir) {
+                snek.dir = inputBuffer[0];
         }
 
         inputBuffer[0] = inputBuffer[1];
@@ -445,6 +508,13 @@ void update() {
         } 
         printf("\n");
     */
+        /*for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                printf("%d ", AISquareValue(i, j));
+            }
+            printf("\n");
+        }
+        printf("\n");*/
     }
 
 

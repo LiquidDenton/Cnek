@@ -10,3 +10,7 @@
 
 #define FPS 60
 #define FRAME_TIME (1000/FPS)
+
+#define AI_ENABLED 0x01
+#define AI_REPATH 0x02
+#define AI_PATH_COMPLETE 0x03
