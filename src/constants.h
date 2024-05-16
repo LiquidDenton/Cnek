@@ -14,3 +14,7 @@
 #define AI_ENABLED 0x01
 #define AI_REPATH 0x02
 #define AI_PATH_COMPLETE 0x03
+
+#define AI_WALKABLE 0x01
+#define AI_EXPLORED 0x02
+#define AI_DIR 0x0C

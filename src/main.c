@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
+#include "./pathfinder.c"
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -83,8 +84,8 @@ Uint8 grid[GRID_SIZE][GRID_SIZE];
 
 struct AI_Data {
     Uint8 flags;
-    Uint8 dir;
     Uint8 grid[GRID_SIZE][GRID_SIZE];
+    Uint8 AIDirs[GRID_SIZE * GRID_SIZE];
 };
 
 struct AI_Data AIData;
@@ -97,7 +98,7 @@ Uint8 AISquareValue(Uint8 x, Uint8 y, Uint8 targetX, Uint8 targetY) {
     if (x >= GRID_SIZE || x < 0 || y >= GRID_SIZE || y < 0) {
         return 255;
     }
-    if (0 < AIData.grid[x][y]) {
+    if (!(AIData.grid[x][y] & AI_WALKABLE)) {
         return 255;
     }
     return abs((x - targetX)) + abs((y - targetY));
@@ -107,30 +108,87 @@ Uint8 AIDir(Uint8 x, Uint8 y, Uint8 targetX, Uint8 targetY) {
 
     Uint8 min = 255;
 
+    Node AIgrid[GRID_SIZE][GRID_SIZE];
+
+    Uint8 dir;
+
     typeForMyStupidMath bestDir;
-
-    for (int i = 0; i < GRID_SIZE; i++) {
-        for (int j = 0;j < GRID_SIZE; j++) {
-            AIData.grid[i][j] = grid[i][j];
+    if (AIData.flags & AI_REPATH) {
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0;j < GRID_SIZE; j++) {
+                AIgrid[i][j].obstacle = grid[i][j] > 0;
+            }
         }
+        AIgrid[x][y].obstacle = 0;
+        AIPath(x, y, targetX, targetY, AIgrid);
     }
 
-    for (int i = 0; i < 4; i++) {
-        if (snek.dir != 2 && i == 0 && min > AISquareValue(x + 1, y, targetX, targetY)) {
-            min = AISquareValue(x + 1, y, targetX, targetY);
-            bestDir.dir = 0;
-        } else if (snek.dir != 3 && i == 1 && min > AISquareValue(x, y + 1, targetX, targetY)) {
-            min = AISquareValue(x, y + 1, targetX, targetY);
-            bestDir.dir = 1;
-        } else if (snek.dir != 0 && i == 2 && min > AISquareValue(x - 1, y, targetX, targetY)) {
-            min = AISquareValue(x - 1, y, targetX, targetY);
-            bestDir.dir = 2;
-        } else if (snek.dir != 1 && i == 3 && min > AISquareValue(x, y - 1, targetX, targetY)) {
-            min = AISquareValue(x, y - 1, targetX, targetY);
-            bestDir.dir = 3;
+    //for (int i = 0; i < 4; i++) {
+    //    if (snek.dir != 2 && i == 0 && min > AISquareValue(x + 1, y, targetX, targetY)) {
+    //        min = AISquareValue(x + 1, y, targetX, targetY);
+    //        bestDir.dir = 0;
+    //    } else if (snek.dir != 3 && i == 1 && min > AISquareValue(x, y + 1, targetX, targetY)) {
+    //        min = AISquareValue(x, y + 1, targetX, targetY);
+    //        bestDir.dir = 1;
+    //    } else if (snek.dir != 0 && i == 2 && min > AISquareValue(x - 1, y, targetX, targetY)) {
+    //        min = AISquareValue(x - 1, y, targetX, targetY);
+    //        bestDir.dir = 2;
+    //    } else if (snek.dir != 1 && i == 3 && min > AISquareValue(x, y - 1, targetX, targetY)) {
+    //        min = AISquareValue(x, y - 1, targetX, targetY);
+    //        bestDir.dir = 3;
+    //    }
+
+    Point child = {targetX, targetY};
+    Point current = child;
+    Uint8 Continue = 0;
+
+    while (1) {
+        Continue = 0;
+        for (int i = 0; i < 4; i++) {
+            if (i == 0) {
+                current.x = child.x + 1;
+                current.y = child.y;
+            } else if (i == 1) {
+                current.y = child.y + 1;
+                current.x = child.x;
+            } else if (i == 2) {
+                current.x = child.x - 1;
+                current.y = child.y;
+            } else if (i == 3) {
+                current.y = child.y - 1;
+                current.x = child.x;
+            }
+
+            if (current.x == x && current.y == y) {
+                break;
+            }
+
+            if (AIgrid[child.x][child.y].parent.x == current.x && AIgrid[child.x][child.y].parent.y == current.y) {
+                child = current;
+                Continue = 1;
+                break;
+            }
         }
+        if (Continue) {
+            continue;
+        }
+
+        break;
+
     }
-    return (Uint8) bestDir.dir;
+
+    printf("%d %d %d %d\n", current.x, current.y, child.x, child.y);
+
+    if (current.x < child.x) {
+        return 0;
+    } else if (current.y < child.y) {
+        return 1;
+    } else if (current.x > child.x) {
+        return 2;
+    } else {
+        return 3;
+    }
+
 }
 
 short int initSDL(void) {
@@ -374,6 +432,7 @@ void processInput() {
                     break;
                 case SDLK_z:
                     AIData.flags |= AI_ENABLED;
+                    AIData.flags |= AI_REPATH;
                     break;
                 case SDLK_x:
                     AIData.flags &= 254;
@@ -403,7 +462,7 @@ void update() {
         if (AIData.flags & AI_ENABLED) {
             snek.dir = AIDir(snek.headPos[0], snek.headPos[1], apple.pos[0], apple.pos[1]);
         } else if (inputBuffer[0] >= 0 && inputBuffer[0] != foo.dir) {
-                snek.dir = inputBuffer[0];
+            snek.dir = inputBuffer[0];
         }
 
         inputBuffer[0] = inputBuffer[1];
