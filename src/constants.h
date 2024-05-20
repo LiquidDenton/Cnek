@@ -18,3 +18,8 @@
 #define AI_WALKABLE 0x01
 #define AI_EXPLORED 0x02
 #define AI_DIR 0x0C
+
+#define RIGHT 0
+#define DOWN 1
+#define LEFT 2
+#define UP 3
