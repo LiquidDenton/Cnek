@@ -1,6 +1,4 @@
-#include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_timer.h>
-#include <SDL2/SDL_video.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -90,12 +88,14 @@ struct AI_Data {
 
 struct AI_Data AIData;
 
+Node AIgrid[GRID_SIZE][GRID_SIZE];
 
 
-int gpwsTime;
+
+unsigned int gpwsTime;
 
 Uint8 AISquareValue(Uint8 x, Uint8 y, Uint8 targetX, Uint8 targetY) {
-    if (x >= GRID_SIZE || x < 0 || y >= GRID_SIZE || y < 0) {
+    if (x >= GRID_SIZE || y >= GRID_SIZE) {
         return 255;
     }
     if (!(AIData.grid[x][y] & AI_WALKABLE)) {
@@ -106,22 +106,20 @@ Uint8 AISquareValue(Uint8 x, Uint8 y, Uint8 targetX, Uint8 targetY) {
 
 Uint8 AIDir(Uint8 x, Uint8 y, Uint8 targetX, Uint8 targetY) {
 
-    Uint8 min = 255;
-
-    Node AIgrid[GRID_SIZE][GRID_SIZE];
-
-    Uint8 dir;
-
-    typeForMyStupidMath bestDir;
+    // printf("foo\n");
     if (AIData.flags & AI_REPATH) {
+        printf("Generating path\n");
         for (int i = 0; i < GRID_SIZE; i++) {
             for (int j = 0;j < GRID_SIZE; j++) {
+                AIgrid[i][j] = (Node) {(Point) {-1, -1}, 0, 0, 0, 0, 0};
                 AIgrid[i][j].obstacle = grid[i][j] > 0;
             }
         }
         AIgrid[x][y].obstacle = 0;
         AIPath(x, y, targetX, targetY, AIgrid);
+        printf("Path complete!\n");
     }
+
 
     //for (int i = 0; i < 4; i++) {
     //    if (snek.dir != 2 && i == 0 && min > AISquareValue(x + 1, y, targetX, targetY)) {
@@ -140,44 +138,23 @@ Uint8 AIDir(Uint8 x, Uint8 y, Uint8 targetX, Uint8 targetY) {
 
     Point child = {targetX, targetY};
     Point current = child;
-    Uint8 Continue = 0;
+    int depth = 0;
 
-    while (1) {
-        Continue = 0;
-        for (int i = 0; i < 4; i++) {
-            if (i == 0) {
-                current.x = child.x + 1;
-                current.y = child.y;
-            } else if (i == 1) {
-                current.y = child.y + 1;
-                current.x = child.x;
-            } else if (i == 2) {
-                current.x = child.x - 1;
-                current.y = child.y;
-            } else if (i == 3) {
-                current.y = child.y - 1;
-                current.x = child.x;
-            }
+    printf("Finding direction\n");
 
-            if (current.x == x && current.y == y) {
-                break;
-            }
+    while (depth <= MAX_DEPTH) {
 
-            if (AIgrid[child.x][child.y].parent.x == current.x && AIgrid[child.x][child.y].parent.y == current.y) {
-                child = current;
-                Continue = 1;
-                break;
-            }
+        if (current.x == x && current.y == y) {
+            break;
         }
-        if (Continue) {
-            continue;
-        }
-
-        break;
-
+        child = current;
+        current = AIgrid[current.x][current.y].parent;
+        depth++;
+        printf("%d %d %d %d\n", current.x, current.y, child.x, child.y);
     }
+    printf("Snek found!\n");
 
-    printf("%d %d %d %d\n", current.x, current.y, child.x, child.y);
+
 
     if (current.x < child.x) {
         return 0;
@@ -459,11 +436,14 @@ void update() {
         struct TypeForMyStupidMath foo;
         foo.dir = snek.dir;
         foo.dir += 2;
+
         if (AIData.flags & AI_ENABLED) {
             snek.dir = AIDir(snek.headPos[0], snek.headPos[1], apple.pos[0], apple.pos[1]);
         } else if (inputBuffer[0] >= 0 && inputBuffer[0] != foo.dir) {
             snek.dir = inputBuffer[0];
         }
+
+
 
         inputBuffer[0] = inputBuffer[1];
         inputBuffer[1] = -1;
@@ -577,7 +557,7 @@ void update() {
     }
 
 
-
+    printf("update done\n");
 
 
 }
@@ -710,12 +690,14 @@ int main() {
     setup();
 
     while (gameIsRunning) {
-	if (FRAME_TIME)  {
-        	SDL_Delay(FRAME_TIME);
-	}
+        int cycleStartTime = SDL_GetTicks();
         processInput();
         update();
         render();
+        if (FRAME_TIME)  {
+
+                SDL_Delay(FRAME_TIME - (SDL_GetTicks() - cycleStartTime));
+        }
     }
 
     destroyWindow();

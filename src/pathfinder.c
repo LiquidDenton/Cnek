@@ -67,51 +67,62 @@ void closeNode(Node* node, Point nodePoint, Point* openList[]) {
         }
     }
 
-    // set nodes state to closed
+    // set node's state to closed
 
     node -> closed = 1;
 
 }
 
-void findNeighbors(Point current, Point* openList[], Node grid[GRID_SIZE][GRID_SIZE], Point start, Point end) {
+void findNeighbors(Point current, Point* openList[], Node fooGrid[GRID_SIZE][GRID_SIZE], Point start, Point end) {
 
     // open the node in each direction if the node is not closed and not an obstacle
 
-    if (!grid[current.x + 1][current.y].closed && !grid[current.x + 1][current.y].obstacle) {
-        openNode(start, end, current, (Point) {current.x + 1, current.y}, &grid[current.x + 1][current.y], openList);
+    // check that the node to be opened is in bounds
+    if (current.x < GRID_SIZE - 1) {
+        if (!fooGrid[current.x + 1][current.y].closed && !fooGrid[current.x + 1][current.y].obstacle) {
+            openNode(start, end, current, (Point) {current.x + 1, current.y}, &fooGrid[current.x + 1][current.y], openList);
+        }
     }
-    if (!grid[current.x - 1][current.y].closed && !grid[current.x - 1][current.y].obstacle) {
-        openNode(start, end, current, (Point) {current.x - 1, current.y}, &grid[current.x - 1][current.y], openList);
+    if (current.x > 0) {
+        if (!fooGrid[current.x - 1][current.y].closed && !fooGrid[current.x - 1][current.y].obstacle && current.x > 0) {
+            openNode(start, end, current, (Point) {current.x - 1, current.y}, &fooGrid[current.x - 1][current.y], openList);
+        }
     }
-    if (!grid[current.x][current.y + 1].closed && !grid[current.x][current.y + 1].obstacle) {
-        openNode(start, end, current, (Point) {current.x, current.y + 1}, &grid[current.x][current.y + 1], openList);
+    if (current.y < GRID_SIZE - 1){
+        if (!fooGrid[current.x][current.y + 1].closed && !fooGrid[current.x][current.y + 1].obstacle) {
+            openNode(start, end, current, (Point) {current.x, current.y + 1}, &fooGrid[current.x][current.y + 1], openList);
+        }
     }
-    if (!grid[current.x][current.y - 1].closed && !grid[current.x][current.y - 1].obstacle) {
-        openNode(start, end, current, (Point) {current.x, current.y - 1}, &grid[current.x][current.y - 1], openList);
+    if (current.y > 0) {
+        if (!fooGrid[current.x][current.y - 1].closed && !fooGrid[current.x][current.y - 1].obstacle) {
+            openNode(start, end, current, (Point) {current.x, current.y - 1}, &fooGrid[current.x][current.y - 1], openList);
+        }
     }
 }
 
 // A* algorithm function
-void astar(Node grid[GRID_SIZE][GRID_SIZE], Point start, Point end) {
+void astar(Node fooGrid[GRID_SIZE][GRID_SIZE], Point start, Point end) {
     Point* openList[GRID_SIZE * GRID_SIZE];
     Point current = start;
+    int depth = 0;
 
     // clear openList
     for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+        openList[i] = malloc(sizeof(Point));
         *openList[i] = (Point) {-1, -1};
     }
 
-    while (1) {
+    while (depth <= MAX_DEPTH) {
 
         // get neighbors of current
 
-        findNeighbors(current, openList, grid, start, end);
+        findNeighbors(current, openList, fooGrid, start, end);
 
         // go to best neighbor
 
-        int minF = 999999; // lowest F value
-        int minH = 999999; // lowest H value
-        Point bestNode; // coords of best node
+        int minF = 99999; // lowest F value
+        // int minH = 99999; // lowest H value
+        Point bestNode = {0, 0}; // coords of best node
 
         for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
             if (openList[i] -> x < 0) {
@@ -119,31 +130,39 @@ void astar(Node grid[GRID_SIZE][GRID_SIZE], Point start, Point end) {
 
                 continue;
             }
-            if (grid[openList[i] -> x][openList[i] -> y].f < minF) {
-                minF = grid[openList[i] -> x][openList[i] -> y].f;
+            if (fooGrid[openList[i] -> x][openList[i] -> y].f < minF) {
+                minF = fooGrid[openList[i] -> x][openList[i] -> y].f;
                 bestNode = *openList[i];
             }
         }
 
         // close the best node and move to it
 
-        closeNode(&grid[bestNode.x][bestNode.y], bestNode, openList);
+        closeNode(&fooGrid[bestNode.x][bestNode.y], bestNode, openList);
         current = bestNode;
 
-        if (current.x == end.x && current.x == current.y) {
+        if (current.x == end.x && current.y == end.y) {
             // path found
-            return;
+            break;
         }
 
+        depth++;
+
     }
+
+    // free memory
+    for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+        free(openList[i]);
+    }
+
 
 }
 
 
-void AIPath(int startX, int startY, int endX, int endY, Node grid[GRID_SIZE][GRID_SIZE]) {
+void AIPath(int startX, int startY, int endX, int endY, Node fooGrid[GRID_SIZE][GRID_SIZE]) {
     Point start = {startX, startY};
     Point end = {endX, endY};
 
-    astar(grid, start, end);
+    astar(fooGrid, start, end);
 
 }

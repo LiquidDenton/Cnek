@@ -6,7 +6,7 @@
 #define MENU_INVERTED_BOUNCESPEED 200
 
 #define SPEED_INCREASE_FACTOR 0.05
-#define SPEED_OFFSET 5
+#define SPEED_OFFSET 50
 
 #define FPS 60
 #define FRAME_TIME (1000/FPS)
@@ -23,3 +23,5 @@
 #define DOWN 1
 #define LEFT 2
 #define UP 3
+
+#define MAX_DEPTH (GRID_SIZE * GRID_SIZE)
