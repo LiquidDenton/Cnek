@@ -94,14 +94,14 @@ Node AIgrid[GRID_SIZE][GRID_SIZE];
 
 unsigned int gpwsTime;
 
-Uint8 AISquareValue(Uint8 x, Uint8 y, Uint8 targetX, Uint8 targetY) {
+Uint8 AISquareValue(Uint8 x, Uint8 y, Node node) {
     if (x >= GRID_SIZE || y >= GRID_SIZE) {
         return 255;
     }
-    if (!(AIData.grid[x][y] & AI_WALKABLE)) {
+    if (node.obstacle) {
         return 255;
     }
-    return abs((x - targetX)) + abs((y - targetY));
+    return 0;
 }
 
 Uint8 AIDir(Uint8 x, Uint8 y, Uint8 targetX, Uint8 targetY) {
@@ -118,23 +118,11 @@ Uint8 AIDir(Uint8 x, Uint8 y, Uint8 targetX, Uint8 targetY) {
         AIgrid[x][y].obstacle = 0;
         AIPath(x, y, targetX, targetY, AIgrid);
         printf("Path complete!\n");
+        // Disable pathing
+
+        AIData.flags &= ~AI_REPATH;
+
     }
-
-
-    //for (int i = 0; i < 4; i++) {
-    //    if (snek.dir != 2 && i == 0 && min > AISquareValue(x + 1, y, targetX, targetY)) {
-    //        min = AISquareValue(x + 1, y, targetX, targetY);
-    //        bestDir.dir = 0;
-    //    } else if (snek.dir != 3 && i == 1 && min > AISquareValue(x, y + 1, targetX, targetY)) {
-    //        min = AISquareValue(x, y + 1, targetX, targetY);
-    //        bestDir.dir = 1;
-    //    } else if (snek.dir != 0 && i == 2 && min > AISquareValue(x - 1, y, targetX, targetY)) {
-    //        min = AISquareValue(x - 1, y, targetX, targetY);
-    //        bestDir.dir = 2;
-    //    } else if (snek.dir != 1 && i == 3 && min > AISquareValue(x, y - 1, targetX, targetY)) {
-    //        min = AISquareValue(x, y - 1, targetX, targetY);
-    //        bestDir.dir = 3;
-    //    }
 
     Point child = {targetX, targetY};
     Point current = child;
@@ -149,6 +137,31 @@ Uint8 AIDir(Uint8 x, Uint8 y, Uint8 targetX, Uint8 targetY) {
         }
         child = current;
         current = AIgrid[current.x][current.y].parent;
+        // Break, if the node's parent is negative, indicating that pathing has failed
+        if (current.x < 0 || current.y < 0) {
+            printf("Oh shit Oh god Oh fuck I'm gonna die nooooo i was so young shiiiit\n");
+            AIData.flags |= AI_REPATH;
+
+            int min = 255;
+
+            for (int i = 0; i < 4; i++) {
+                if (snek.dir != 2 && i == 0 && min > AISquareValue(x + 1, y, AIgrid[x + 1][y])) {
+                    min = AISquareValue(x + 1, y, AIgrid[x + 1][y]);
+                    return RIGHT;
+                } else if (snek.dir != 3 && i == 1 && min > AISquareValue(x, y + 1, AIgrid[x][y + 1])) {
+                    min = AISquareValue(x, y + 1, AIgrid[x][y + 1]);
+                    return DOWN;
+                } else if (snek.dir != 0 && i == 2 && min > AISquareValue(x - 1, y, AIgrid[x - 1][y])) {
+                    min = AISquareValue(x - 1, y, AIgrid[x - 1][y]);
+                    return LEFT;
+                } else if (snek.dir != 1 && i == 3 && min > AISquareValue(x, y - 1, AIgrid[x][y - 1])) {
+                    min = AISquareValue(x, y - 1, AIgrid[x][y - 1]);
+                    return UP;
+                } else {
+                    return 0;
+                }
+            }
+        }
         depth++;
         printf("%d %d %d %d\n", current.x, current.y, child.x, child.y);
     }

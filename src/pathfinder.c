@@ -18,14 +18,14 @@ int manhattan(Point start, Point end) {
 }
 
 // evaluate value of node using distance to start and end points
-void evalNode(Point start, Point end, Point current, Node* node) {
+void evalNode(Point start, Point end, Point current, Node* node, int parentF) {
     node->g = manhattan(current, start);
     node->h = manhattan(current, end);
     node->f = node->g + node->h;
 }
 
 // call evaluate the node and add it to the openlist
-void openNode(Point start, Point end, Point parent, Point current, Node* node, Point* openList[]) {
+void openNode(Point start, Point end, Point parent, Point current, Node* node, Point* openList[], int parentF) {
 
     // set nodes parent
 
@@ -46,7 +46,7 @@ void openNode(Point start, Point end, Point parent, Point current, Node* node, P
 
     // evaluate the node
 
-    evalNode(start, end, current, node);
+    evalNode(start, end, current, node, parentF);
 
 }
 
@@ -80,22 +80,22 @@ void findNeighbors(Point current, Point* openList[], Node fooGrid[GRID_SIZE][GRI
     // check that the node to be opened is in bounds
     if (current.x < GRID_SIZE - 1) {
         if (!fooGrid[current.x + 1][current.y].closed && !fooGrid[current.x + 1][current.y].obstacle) {
-            openNode(start, end, current, (Point) {current.x + 1, current.y}, &fooGrid[current.x + 1][current.y], openList);
+            openNode(start, end, current, (Point) {current.x + 1, current.y}, &fooGrid[current.x + 1][current.y], openList, fooGrid[current.x][current.y].f);
         }
     }
     if (current.x > 0) {
         if (!fooGrid[current.x - 1][current.y].closed && !fooGrid[current.x - 1][current.y].obstacle && current.x > 0) {
-            openNode(start, end, current, (Point) {current.x - 1, current.y}, &fooGrid[current.x - 1][current.y], openList);
+            openNode(start, end, current, (Point) {current.x - 1, current.y}, &fooGrid[current.x - 1][current.y], openList, fooGrid[current.x][current.y].f);
         }
     }
     if (current.y < GRID_SIZE - 1){
         if (!fooGrid[current.x][current.y + 1].closed && !fooGrid[current.x][current.y + 1].obstacle) {
-            openNode(start, end, current, (Point) {current.x, current.y + 1}, &fooGrid[current.x][current.y + 1], openList);
+            openNode(start, end, current, (Point) {current.x, current.y + 1}, &fooGrid[current.x][current.y + 1], openList, fooGrid[current.x][current.y].f);
         }
     }
     if (current.y > 0) {
         if (!fooGrid[current.x][current.y - 1].closed && !fooGrid[current.x][current.y - 1].obstacle) {
-            openNode(start, end, current, (Point) {current.x, current.y - 1}, &fooGrid[current.x][current.y - 1], openList);
+            openNode(start, end, current, (Point) {current.x, current.y - 1}, &fooGrid[current.x][current.y - 1], openList, fooGrid[current.x][current.y].f);
         }
     }
 }
@@ -121,7 +121,7 @@ void astar(Node fooGrid[GRID_SIZE][GRID_SIZE], Point start, Point end) {
         // go to best neighbor
 
         int minF = 99999; // lowest F value
-        // int minH = 99999; // lowest H value
+        int minH = 99999; // lowest H value
         Point bestNode = {0, 0}; // coords of best node
 
         for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
@@ -132,6 +132,11 @@ void astar(Node fooGrid[GRID_SIZE][GRID_SIZE], Point start, Point end) {
             }
             if (fooGrid[openList[i] -> x][openList[i] -> y].f < minF) {
                 minF = fooGrid[openList[i] -> x][openList[i] -> y].f;
+                minH = fooGrid[openList[i] -> x][openList[i] -> y].h;
+                bestNode = *openList[i];
+            } else if (fooGrid[openList[i] -> x][openList[i] -> y].f == minF && fooGrid[openList[i] -> x][openList[i] -> y].h < minH) {
+                minF = fooGrid[openList[i] -> x][openList[i] -> y].f;
+                minH = fooGrid[openList[i] -> x][openList[i] -> y].h;
                 bestNode = *openList[i];
             }
         }
@@ -154,8 +159,6 @@ void astar(Node fooGrid[GRID_SIZE][GRID_SIZE], Point start, Point end) {
     for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
         free(openList[i]);
     }
-
-
 }
 
 
