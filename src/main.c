@@ -412,7 +412,7 @@ void processInput() {
                     AIData.flags |= AI_REPATH;
                     break;
                 case SDLK_x:
-                    AIData.flags &= 254;
+                    AIData.flags &= ~AI_ENABLED;
                     break;
                 case SDLK_ESCAPE:
                     gamePaused = 1;
@@ -478,7 +478,10 @@ void update() {
             Uint8 stopScan;
             Uint8 endOfSnek = 0;
 
-            while (!endOfSnek) {
+            int depth = 0;
+
+            while (!endOfSnek && depth <= MAX_DEPTH) {
+                depth++;
                 stopScan = 0;
                 for (int i = 0; i < 5 && !stopScan; i++) {
                     switch (i) {
@@ -555,11 +558,6 @@ void update() {
         }
         printf("\n");*/
     }
-
-
-    printf("update done\n");
-
-
 }
 
 void render(void) {
@@ -592,7 +590,9 @@ void render(void) {
 
         }
 
-        while (!endOfSnek) {
+        int depth = 0;
+        while (!endOfSnek && depth <= MAX_DEPTH) {
+            depth++;
             stopScan = 0;
             for (int i = 0; i < 5 && !stopScan; i++) {
                 switch (i) {
@@ -695,8 +695,7 @@ int main() {
         update();
         render();
         if (FRAME_TIME)  {
-
-                SDL_Delay(FRAME_TIME - (SDL_GetTicks() - cycleStartTime));
+                SDL_Delay(FRAME_TIME);
         }
     }
 
