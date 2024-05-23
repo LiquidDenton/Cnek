@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "./constants.h"
+#include <math.h>
 
 typedef struct {
     int x, y; // coordinates
@@ -8,8 +9,8 @@ typedef struct {
 
 typedef struct {
     Point parent;
-    int f, g, h; // f = g + h
-    short int obstacle, closed;
+    short int f, g, h; // f = g + h
+    short int obstacle, closed, tentativeG;
 } Node;
 
 // manhattan distance function
@@ -18,14 +19,24 @@ int manhattan(Point start, Point end) {
 }
 
 // evaluate value of node using distance to start and end points
-void evalNode(Point start, Point end, Point current, Node* node, int parentF) {
+void evalNode(Point start, Point end, Point current, Node* node, int parentTentG) {
     node->g = manhattan(current, start);
     node->h = manhattan(current, end);
     node->f = node->g + node->h;
+    node->tentativeG = parentTentG + 1;
 }
 
 // call evaluate the node and add it to the openlist
-void openNode(Point start, Point end, Point parent, Point current, Node* node, Point* openList[], int parentF) {
+void openNode(Point start, Point end, Point parent, Point current, Node* node, Point* openList[], int parentTentG) {
+
+    // check that node isn't open
+
+    for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+        if (openList[i] -> x == current.x && openList[i] -> y == current.y) {
+            // Node is in list, cancel open
+            return;
+        } 
+    }
 
     // set nodes parent
 
@@ -46,7 +57,7 @@ void openNode(Point start, Point end, Point parent, Point current, Node* node, P
 
     // evaluate the node
 
-    evalNode(start, end, current, node, parentF);
+    evalNode(start, end, current, node, parentTentG);
 
 }
 
@@ -80,22 +91,22 @@ void findNeighbors(Point current, Point* openList[], Node fooGrid[GRID_SIZE][GRI
     // check that the node to be opened is in bounds
     if (current.x < GRID_SIZE - 1) {
         if (!fooGrid[current.x + 1][current.y].closed && !fooGrid[current.x + 1][current.y].obstacle) {
-            openNode(start, end, current, (Point) {current.x + 1, current.y}, &fooGrid[current.x + 1][current.y], openList, fooGrid[current.x][current.y].f);
+            openNode(start, end, current, (Point) {current.x + 1, current.y}, &fooGrid[current.x + 1][current.y], openList, fooGrid[current.x][current.y].tentativeG);
         }
     }
     if (current.x > 0) {
         if (!fooGrid[current.x - 1][current.y].closed && !fooGrid[current.x - 1][current.y].obstacle && current.x > 0) {
-            openNode(start, end, current, (Point) {current.x - 1, current.y}, &fooGrid[current.x - 1][current.y], openList, fooGrid[current.x][current.y].f);
+            openNode(start, end, current, (Point) {current.x - 1, current.y}, &fooGrid[current.x - 1][current.y], openList, fooGrid[current.x][current.y].tentativeG);
         }
     }
     if (current.y < GRID_SIZE - 1){
         if (!fooGrid[current.x][current.y + 1].closed && !fooGrid[current.x][current.y + 1].obstacle) {
-            openNode(start, end, current, (Point) {current.x, current.y + 1}, &fooGrid[current.x][current.y + 1], openList, fooGrid[current.x][current.y].f);
+            openNode(start, end, current, (Point) {current.x, current.y + 1}, &fooGrid[current.x][current.y + 1], openList, fooGrid[current.x][current.y].tentativeG);
         }
     }
     if (current.y > 0) {
         if (!fooGrid[current.x][current.y - 1].closed && !fooGrid[current.x][current.y - 1].obstacle) {
-            openNode(start, end, current, (Point) {current.x, current.y - 1}, &fooGrid[current.x][current.y - 1], openList, fooGrid[current.x][current.y].f);
+            openNode(start, end, current, (Point) {current.x, current.y - 1}, &fooGrid[current.x][current.y - 1], openList, fooGrid[current.x][current.y].tentativeG);
         }
     }
 }
@@ -123,6 +134,7 @@ void astar(Node fooGrid[GRID_SIZE][GRID_SIZE], Point start, Point end) {
         int minF = 99999; // lowest F value
         int minH = 99999; // lowest H value
         Point bestNode = {0, 0}; // coords of best node
+        int openNodeCount = 0; // Number of open nodes in openList
 
         for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
             if (openList[i] -> x < 0) {
@@ -130,6 +142,8 @@ void astar(Node fooGrid[GRID_SIZE][GRID_SIZE], Point start, Point end) {
 
                 continue;
             }
+            // open node found, increment node count and evaluate node
+            openNodeCount++;
             if (fooGrid[openList[i] -> x][openList[i] -> y].f < minF) {
                 minF = fooGrid[openList[i] -> x][openList[i] -> y].f;
                 minH = fooGrid[openList[i] -> x][openList[i] -> y].h;
@@ -139,6 +153,12 @@ void astar(Node fooGrid[GRID_SIZE][GRID_SIZE], Point start, Point end) {
                 minH = fooGrid[openList[i] -> x][openList[i] -> y].h;
                 bestNode = *openList[i];
             }
+        }
+
+        // if there arent any open nodes, the snek is trapped, exit
+
+        if (!(openNodeCount > 0)) {
+            break;
         }
 
         // close the best node and move to it
@@ -160,7 +180,6 @@ void astar(Node fooGrid[GRID_SIZE][GRID_SIZE], Point start, Point end) {
         free(openList[i]);
     }
 }
-
 
 void AIPath(int startX, int startY, int endX, int endY, Node fooGrid[GRID_SIZE][GRID_SIZE]) {
     Point start = {startX, startY};

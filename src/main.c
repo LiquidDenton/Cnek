@@ -1,4 +1,3 @@
-#include <SDL2/SDL_timer.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -13,6 +12,8 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 short int gameIsRunning;
 short int gamePaused;
+
+int scoreBuffer;
 
 short int inputBuffer[2];
 
@@ -117,7 +118,7 @@ Uint8 AIDir(Uint8 x, Uint8 y, Uint8 targetX, Uint8 targetY) {
         }
         AIgrid[x][y].obstacle = 0;
         AIPath(x, y, targetX, targetY, AIgrid);
-        printf("Path complete!\n");
+        printf("Path complete!\nFinal tentative cost: %d\n\n", AIgrid[targetX][targetY].tentativeG);
         // Disable pathing
 
         AIData.flags &= ~AI_REPATH;
@@ -128,7 +129,7 @@ Uint8 AIDir(Uint8 x, Uint8 y, Uint8 targetX, Uint8 targetY) {
     Point current = child;
     int depth = 0;
 
-    printf("Finding direction\n");
+    // printf("Finding direction\n");
 
     while (depth <= MAX_DEPTH) {
 
@@ -139,7 +140,7 @@ Uint8 AIDir(Uint8 x, Uint8 y, Uint8 targetX, Uint8 targetY) {
         current = AIgrid[current.x][current.y].parent;
         // Break, if the node's parent is negative, indicating that pathing has failed
         if (current.x < 0 || current.y < 0) {
-            printf("Oh shit Oh god Oh fuck I'm gonna die nooooo i was so young shiiiit\n");
+            // printf("Oh shit Oh god Oh fuck I'm gonna die nooooo i was so young shiiiit\n");
             AIData.flags |= AI_REPATH;
 
             int min = 255;
@@ -165,7 +166,7 @@ Uint8 AIDir(Uint8 x, Uint8 y, Uint8 targetX, Uint8 targetY) {
         depth++;
         //printf("%d %d %d %d\n", current.x, current.y, child.x, child.y);
     }
-    printf("Snek found!\n");
+    // printf("Snek found!\n");
 
 
 
@@ -350,6 +351,8 @@ void placeApple() {
 void setup(void) {
 
     printf("%d\n", snek.length);
+
+    scoreBuffer = snek.length;
 
     snek.rect.h = SNEK_THICC;
     snek.rect.w = SNEK_THICC;
@@ -703,7 +706,6 @@ int main() {
     setup();
 
     while (gameIsRunning) {
-        int cycleStartTime = SDL_GetTicks();
         processInput();
         update();
         render();
