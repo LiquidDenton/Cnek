@@ -94,11 +94,11 @@ Node AIgrid[GRID_SIZE][GRID_SIZE];
 
 unsigned int gpwsTime;
 
-Uint8 AISquareValue(Uint8 x, Uint8 y, Node node) {
-    if (x >= GRID_SIZE || y >= GRID_SIZE) {
+Uint8 AISquareValue(Uint8 x, Uint8 y) {
+    if (x >= GRID_SIZE  || y >= GRID_SIZE) {
         return 255;
     }
-    if (node.obstacle) {
+    if (grid[x][y] > 0) {
         return 255;
     }
     return 0;
@@ -144,26 +144,26 @@ Uint8 AIDir(Uint8 x, Uint8 y, Uint8 targetX, Uint8 targetY) {
 
             int min = 255;
 
-            for (int i = 0; i < 4; i++) {
-                if (snek.dir != 2 && i == 0 && min > AISquareValue(x + 1, y, AIgrid[x + 1][y])) {
-                    min = AISquareValue(x + 1, y, AIgrid[x + 1][y]);
+            for (int i = 0; i <= 4; i++) {
+                if (snek.dir != 2 && i == 0 && min > AISquareValue(x + 1, y)) {
+                    min = AISquareValue(x + 1, y);
                     return RIGHT;
-                } else if (snek.dir != 3 && i == 1 && min > AISquareValue(x, y + 1, AIgrid[x][y + 1])) {
-                    min = AISquareValue(x, y + 1, AIgrid[x][y + 1]);
+                } else if (snek.dir != 3 && i == 1 && min > AISquareValue(x, y + 1)) {
+                    min = AISquareValue(x, y + 1);
                     return DOWN;
-                } else if (snek.dir != 0 && i == 2 && min > AISquareValue(x - 1, y, AIgrid[x - 1][y])) {
-                    min = AISquareValue(x - 1, y, AIgrid[x - 1][y]);
+                } else if (snek.dir != 0 && i == 2 && min > AISquareValue(x - 1, y)) {
+                    min = AISquareValue(x - 1, y);
                     return LEFT;
-                } else if (snek.dir != 1 && i == 3 && min > AISquareValue(x, y - 1, AIgrid[x][y - 1])) {
-                    min = AISquareValue(x, y - 1, AIgrid[x][y - 1]);
+                } else if (snek.dir != 1 && i == 3 && min > AISquareValue(x, y - 1)) {
+                    min = AISquareValue(x, y - 1);
                     return UP;
-                } else {
+                } else if (i == 4) {
                     return 0;
                 }
             }
         }
         depth++;
-        printf("%d %d %d %d\n", current.x, current.y, child.x, child.y);
+        //printf("%d %d %d %d\n", current.x, current.y, child.x, child.y);
     }
     printf("Snek found!\n");
 
@@ -708,7 +708,7 @@ int main() {
         update();
         render();
         if (FRAME_TIME)  {
-                SDL_Delay(FRAME_TIME);
+            SDL_Delay(FRAME_TIME);
         }
     }
 
