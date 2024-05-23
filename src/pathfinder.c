@@ -22,8 +22,8 @@ int manhattan(Point start, Point end) {
 void evalNode(Point start, Point end, Point current, Node* node, int parentTentG) {
     node->g = manhattan(current, start);
     node->h = manhattan(current, end);
-    node->f = node->g + node->h;
     node->tentativeG = parentTentG + 1;
+    node->f = node->g + node->h;
 }
 
 // call evaluate the node and add it to the openlist

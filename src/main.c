@@ -705,7 +705,29 @@ int main() {
 
     setup();
 
+    //gamePaused = 0;
+    //
+    //AIData.flags |= AI_ENABLED;
+    //
+    //int min = 9999;
+    //int max = 0;
+    //int avg = 100;
+    //int i = 0;
+
     while (gameIsRunning) {
+        //if (gamePaused) {
+        //    if (scoreBuffer > max) {
+        //        max = scoreBuffer;
+        //    } else if (scoreBuffer < min) {
+        //        min = scoreBuffer;
+        //    }
+        //    avg = (scoreBuffer + avg) / 2;
+        //    i++;
+        //    gamePaused = 0;
+        //    if (i > 1000) {
+        //        break;
+        //    }
+        //}
         processInput();
         update();
         render();
@@ -715,6 +737,8 @@ int main() {
     }
 
     destroyWindow();
+
+    //printf("Test complete!\nResults:\nMax: %d\nMin: %d\nAvg: %d\nIterations: %d\n", max, min, avg, i);
 
     return 0;
 }
